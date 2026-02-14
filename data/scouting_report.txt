@@ -1,0 +1,117 @@
+======================================================================
+UNDERVALUED GEMS SCOUT - PROFESSIONAL SCOUTING REPORT
+======================================================================
+Generated: 2026-02-14 10:24
+======================================================================
+
+Team Focus: ALL PLAYERS
+----------------------------------------------------------------------
+
+TOP 10 UNDERVALUED PLAYERS:
+--------------------------------------------------
+
+1. Aaron Judge
+   WAR: 11.30
+   Salary: $0.00M
+   wOBA: 0.476
+   BABIP: 0.367
+   ISO: 0.379
+   K%: 0.2%
+   Luck: 0.164 - LUCKY (SELL)
+
+2. Aaron Judge
+   WAR: 11.10
+   Salary: $0.00M
+   wOBA: 0.458
+   BABIP: 0.340
+   ISO: 0.375
+   K%: 0.3%
+   Luck: 0.169 - LUCKY (SELL)
+
+3. Mookie Betts
+   WAR: 10.20
+   Salary: $0.00M
+   wOBA: 0.449
+   BABIP: 0.368
+   ISO: 0.294
+   K%: 0.1%
+   Luck: 0.136 - LUCKY (SELL)
+
+4. Aaron Judge
+   WAR: 10.10
+   Salary: $0.00M
+   wOBA: 0.463
+   BABIP: 0.376
+   ISO: 0.357
+   K%: 0.2%
+   Luck: 0.143 - LUCKY (SELL)
+
+5. Mike Trout
+   WAR: 9.40
+   Salary: $0.00M
+   wOBA: 0.447
+   BABIP: 0.346
+   ISO: 0.316
+   K%: 0.2%
+   Luck: 0.153 - LUCKY (SELL)
+
+6. Cal Raleigh
+   WAR: 9.10
+   Salary: $0.00M
+   wOBA: 0.392
+   BABIP: 0.248
+   ISO: 0.342
+   K%: 0.3%
+   Luck: 0.181 - LUCKY (SELL)
+
+7. Shohei Ohtani
+   WAR: 8.90
+   Salary: $0.00M
+   wOBA: 0.431
+   BABIP: 0.336
+   ISO: 0.336
+   K%: 0.2%
+   Luck: 0.145 - LUCKY (SELL)
+
+8. Aaron Judge
+   WAR: 8.70
+   Salary: $0.00M
+   wOBA: 0.430
+   BABIP: 0.357
+   ISO: 0.343
+   K%: 0.3%
+   Luck: 0.127 - LUCKY (SELL)
+
+9. Juan Soto
+   WAR: 8.30
+   Salary: $0.00M
+   wOBA: 0.421
+   BABIP: 0.298
+   ISO: 0.281
+   K%: 0.2%
+   Luck: 0.168 - LUCKY (SELL)
+
+10. Alex Bregman
+   WAR: 8.30
+   Salary: $0.00M
+   wOBA: 0.418
+   BABIP: 0.281
+   ISO: 0.296
+   K%: 0.1%
+   Luck: 0.179 - LUCKY (SELL)
+
+======================================================================
+SUMMARY STATISTICS
+--------------------------------------------------
+   Average WAR: 7.57
+   Max WAR: 11.30
+   Average Salary: $0.00M
+   Total Salary: $0.00M
+   Unlucky Players: 0
+   Lucky Players: 50
+
+======================================================================
+RECOMMENDATIONS:
+--------------------------------------------------
+
+======================================================================
