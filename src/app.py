@@ -1,6 +1,6 @@
 """
 app.py - Undervalued Gems Scout Interactive Dashboard
-WITH DYNAMIC COLUMN DETECTION - CORREGIDO
+WITH DYNAMIC COLUMN DETECTION - PROFESSIONAL LOADING SCREEN
 """
 
 import streamlit as st
@@ -15,7 +15,7 @@ from datetime import datetime
 import base64
 
 # =============================================================================
-# PAGE CONFIGURATION
+# PAGE CONFIGURATION - MUST BE FIRST
 # =============================================================================
 st.set_page_config(
     page_title="Undervalued Gems Scout",
@@ -23,6 +23,270 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# =============================================================================
+# PROFESSIONAL LOADING SCREEN
+# =============================================================================
+def show_professional_loading_screen():
+    """Professional full-screen loading animation"""
+
+    # CSS for loading screen
+    st.markdown("""
+    <style>
+    /* HIDE ALL STREAMLIT ELEMENTS DURING LOADING */
+    #MainMenu {visibility: hidden;}
+    header {visibility: hidden;}
+    footer {visibility: hidden;}
+    
+    /* FULLSCREEN LOADING OVERLAY */
+    .loading-fullscreen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #0a1928 0%, #1a3a4a 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        color: white;
+    }
+    
+    /* WELCOME MESSAGE */
+    .welcome-message {
+        font-size: 48px;
+        font-weight: 800;
+        margin-bottom: 10px;
+        text-align: center;
+        background: linear-gradient(120deg, #4ecdc4, #45b7d1);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: glow 3s infinite;
+    }
+    
+    @keyframes glow {
+        0% { text-shadow: 0 0 20px rgba(78, 205, 196, 0.3); }
+        50% { text-shadow: 0 0 40px rgba(78, 205, 196, 0.6); }
+        100% { text-shadow: 0 0 20px rgba(78, 205, 196, 0.3); }
+    }
+    
+    .welcome-subtitle {
+        font-size: 20px;
+        font-weight: 300;
+        margin-bottom: 40px;
+        text-align: center;
+        color: #a8e6cf;
+        opacity: 0.9;
+        font-style: italic;
+    }
+    
+    .pulse-container { 
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        margin: 30px 0; 
+    }
+    
+    .pulse-circle {
+        width: 120px; 
+        height: 120px; 
+        background: linear-gradient(135deg, #4ecdc4, #45b7d1);
+        border-radius: 50%; 
+        position: relative;
+        animation: pulse 2s infinite; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center;
+        font-size: 60px; 
+        color: white;
+        box-shadow: 0 10px 30px rgba(78, 205, 196, 0.5);
+    }
+    
+    .pulse-circle::before, .pulse-circle::after {
+        content: ''; 
+        position: absolute; 
+        border: 2px solid #4ecdc4; 
+        border-radius: 50%;
+        width: 100%; 
+        height: 100%; 
+        animation: ripple 2s infinite;
+        opacity: 0.7;
+    }
+    
+    .pulse-circle::after { 
+        animation-delay: 0.5s; 
+    }
+    
+    @keyframes pulse { 
+        0% { 
+            transform: scale(0.95); 
+            box-shadow: 0 0 0 0 rgba(78, 205, 196, 0.7); 
+        }
+        70% { 
+            transform: scale(1); 
+            box-shadow: 0 0 0 30px rgba(78, 205, 196, 0); 
+        }
+        100% { 
+            transform: scale(0.95); 
+            box-shadow: 0 0 0 0 rgba(78, 205, 196, 0); 
+        } 
+    }
+    
+    @keyframes ripple { 
+        0% { 
+            transform: scale(1); 
+            opacity: 1; 
+        } 
+        100% { 
+            transform: scale(2); 
+            opacity: 0; 
+        } 
+    }
+    
+    .loading-text { 
+        font-size: 24px; 
+        font-weight: 300; 
+        margin-top: 30px; 
+        text-align: center; 
+        color: #4ecdc4;
+    }
+    
+    .progress-container { 
+        width: 500px; 
+        height: 8px; 
+        background: rgba(255,255,255,0.1); 
+        border-radius: 4px; 
+        margin-top: 40px; 
+        overflow: hidden; 
+        border: 1px solid rgba(78, 205, 196, 0.3);
+    }
+    
+    .progress-bar { 
+        height: 100%; 
+        background: linear-gradient(90deg, #4ecdc4, #45b7d1); 
+        width: 0%; 
+        border-radius: 4px; 
+        animation: progress 2.5s ease-in-out forwards; 
+        box-shadow: 0 0 20px rgba(78, 205, 196, 0.8);
+    }
+    
+    @keyframes progress { 
+        0% { 
+            width: 0%; 
+        } 
+        100% { 
+            width: 100%; 
+        } 
+    }
+    
+    .steps-container {
+        display: flex;
+        gap: 30px;
+        margin-top: 30px;
+        color: #a8e6cf;
+        font-size: 14px;
+    }
+    
+    .step {
+        text-align: center;
+        padding: 10px 20px;
+        border-radius: 30px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(78, 205, 196, 0.2);
+    }
+    
+    .step-active {
+        background: rgba(78, 205, 196, 0.2);
+        border-color: #4ecdc4;
+        color: #4ecdc4;
+        font-weight: 600;
+    }
+    
+    /* HIDE CONTENT WHILE LOADING */
+    .app-content {
+        display: none;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Loading animation container
+    loading_placeholder = st.empty()
+
+    with loading_placeholder.container():
+        st.markdown("""
+        <div class='loading-fullscreen'>
+            <div class='welcome-message'>⚾ UNDERVALUED GEMS SCOUT</div>
+            <div class='welcome-subtitle'>Advanced Baseball Analytics Platform</div>
+            <div class='pulse-container'>
+                <div class='pulse-circle'>⚾</div>
+            </div>
+            <div class='loading-text' id="loading-text">Initializing analytics engine...</div>
+            <div class='progress-container'>
+                <div class='progress-bar'></div>
+            </div>
+            <div class='steps-container'>
+                <div class='step' id="step1">📊 Loading Data</div>
+                <div class='step' id="step2">⚙️ Processing</div>
+                <div class='step' id="step3">📈 Preparing Visualizations</div>
+                <div class='step' id="step4">🚀 Ready</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Simulate loading steps with delays
+        time.sleep(1)
+
+        # Update step 1
+        st.markdown("""
+        <script>
+        setTimeout(function() {
+            document.getElementById('step1').style.background = 'rgba(78,205,196,0.2)';
+            document.getElementById('step1').style.borderColor = '#4ecdc4';
+            document.getElementById('loading-text').innerText = 'Loading player data...';
+        }, 1000);
+        </script>
+        """, unsafe_allow_html=True)
+
+        time.sleep(1)
+
+        # Update step 2
+        st.markdown("""
+        <script>
+        setTimeout(function() {
+            document.getElementById('step2').style.background = 'rgba(78,205,196,0.2)';
+            document.getElementById('step2').style.borderColor = '#4ecdc4';
+            document.getElementById('loading-text').innerText = 'Processing statistics...';
+        }, 2000);
+        </script>
+        """, unsafe_allow_html=True)
+
+        time.sleep(1)
+
+        # Update step 3
+        st.markdown("""
+        <script>
+        setTimeout(function() {
+            document.getElementById('step3').style.background = 'rgba(78,205,196,0.2)';
+            document.getElementById('step3').style.borderColor = '#4ecdc4';
+            document.getElementById('loading-text').innerText = 'Creating visualizations...';
+        }, 3000);
+        </script>
+        """, unsafe_allow_html=True)
+
+        time.sleep(1)
+
+    # Clear loading screen
+    loading_placeholder.empty()
+
+    # Show brief success message
+    success_msg = st.empty()
+    success_msg.success("✅ System loaded successfully | Undervalued Gems Scout")
+    time.sleep(1.5)
+    success_msg.empty()
+
 
 # =============================================================================
 # CUSTOM CSS
@@ -144,41 +408,43 @@ st.markdown("""
         background: linear-gradient(90deg, #4ecdc4, #45b7d1) !important;
         color: white !important;
     }
+    
+    /* Animation for content after loading */
+    .app-content {
+        animation: fadeIn 0.8s ease-in;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Estilo para la pelota - mantiene su color original */
+    .baseball-icon {
+        display: inline-block;
+        background: none !important;
+        -webkit-text-fill-color: initial !important;
+        color: initial !important;
+        filter: drop-shadow(0 0 10px rgba(78, 205, 196, 0.5));
+        margin-right: 5px;
+    }
+    
+    /* Títulos de gráficos en blanco con glow */
+    .chart-title {
+        color: white !important;
+        font-size: 1.4rem;
+        font-weight: 600;
+        text-align: center;
+        margin-bottom: 15px;
+        margin-top: 10px;
+        text-shadow: 0 0 15px rgba(78, 205, 196, 0.5);
+        letter-spacing: 1px;
+        border-bottom: 1px solid rgba(78, 205, 196, 0.3);
+        padding-bottom: 10px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# =============================================================================
-# LOADING SCREEN
-# =============================================================================
-def show_loading_screen():
-    loading = st.empty()
-    with loading.container():
-        st.markdown("""
-        <div style="display: flex; justify-content: center; align-items: center; height: 500px; flex-direction: column;">
-            <div style="width: 150px; height: 150px; position: relative; animation: bounce 1.2s infinite;">
-                <div style="width: 100%; height: 100%; background: white; border-radius: 50%; 
-                    position: relative; overflow: hidden; box-shadow: 0 0 40px rgba(78, 205, 196, 0.8); 
-                    animation: roll 2.5s linear infinite;"></div>
-            </div>
-            <div style="margin-top: 40px; font-size: 1.5rem; color: #4ecdc4; animation: pulse 1.8s infinite;">
-                UNDERVALUED GEMS SCOUT
-            </div>
-            <div style="color: #a8e6cf; margin-top: 20px;">Loading baseball analytics...</div>
-        </div>
-        <style>
-            @keyframes roll { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-            @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-30px); } }
-            @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.7; } }
-        </style>
-        """, unsafe_allow_html=True)
-
-    progress = st.progress(0)
-    for i in range(100):
-        time.sleep(0.02)
-        progress.progress(i + 1)
-
-    loading.empty()
-    progress.empty()
 
 # =============================================================================
 # LOAD ALL DATA
@@ -230,12 +496,14 @@ def load_all_data():
 
     return data
 
+
 # =============================================================================
 # GET AVAILABLE COLUMNS (HELPER FUNCTION)
 # =============================================================================
 def get_available_columns(df, column_list):
     """Return only columns that exist in the dataframe"""
     return [col for col in column_list if col in df.columns]
+
 
 # =============================================================================
 # SIDEBAR FILTERS
@@ -259,7 +527,7 @@ def render_sidebar(data):
             st.error("No datasets found!")
             return None
 
-        selected_dataset = st.selectbox("Select Dataset", dataset_options)
+        selected_dataset = st.selectbox("Select Dataset", dataset_options, key="dataset_select")
 
         # Get current df
         if selected_dataset == "Top 50 - 2025":
@@ -273,13 +541,13 @@ def render_sidebar(data):
         if 'WAR' in df.columns and 'salary' in df.columns:
             df['WAR_per_M'] = df['WAR'] / (df['salary'] + 0.1)
 
-        # Team filter - CHECK IF COLUMN EXISTS
+        # Team filter
         st.markdown('<div class="sidebar-header">🏟️ TEAM</div>', unsafe_allow_html=True)
         team_cols = get_available_columns(df, ['teamID', 'team', 'Team', 'teamId'])
         if team_cols:
             team_col = team_cols[0]
             teams = ['All Teams'] + sorted(df[team_col].dropna().unique().tolist())
-            selected_team = st.selectbox("Team", teams)
+            selected_team = st.selectbox("Team", teams, key="team_select")
         else:
             selected_team = 'All Teams'
             st.info("No team data available")
@@ -290,7 +558,7 @@ def render_sidebar(data):
         if year_cols:
             year_col = year_cols[0]
             years = sorted(df[year_col].unique())
-            selected_year = st.selectbox("Year", ['All Years'] + years)
+            selected_year = st.selectbox("Year", ['All Years'] + years, key="year_select")
         else:
             selected_year = 'All Years'
 
@@ -298,17 +566,17 @@ def render_sidebar(data):
         st.markdown('<div class="sidebar-header">📊 METRICS</div>', unsafe_allow_html=True)
 
         if 'WAR' in df.columns:
-            min_war = st.slider("Min WAR", 0.0, float(df['WAR'].max()), 1.0, 0.5)
+            min_war = st.slider("Min WAR", 0.0, float(df['WAR'].max()), 1.0, 0.5, key="war_slider")
         else:
             min_war = 0
 
         if 'wOBA' in df.columns:
-            wOBA_min = st.slider("Min wOBA", 0.200, 0.500, 0.300, 0.010, format="%.3f")
+            wOBA_min = st.slider("Min wOBA", 0.200, 0.500, 0.300, 0.010, format="%.3f", key="woba_slider")
         else:
             wOBA_min = 0
 
         if 'BABIP' in df.columns:
-            babip_min = st.slider("Min BABIP", 0.200, 0.400, 0.200, 0.010, format="%.3f")
+            babip_min = st.slider("Min BABIP", 0.200, 0.400, 0.200, 0.010, format="%.3f", key="babip_slider")
         else:
             babip_min = 0
 
@@ -316,12 +584,12 @@ def render_sidebar(data):
         st.markdown('<div class="sidebar-header">💰 PRICE</div>', unsafe_allow_html=True)
 
         if 'salary' in df.columns:
-            max_salary = st.slider("Max Salary ($M)", 0.0, float(df['salary'].max()), 2.0, 0.1)
+            max_salary = st.slider("Max Salary ($M)", 0.0, float(df['salary'].max()), 2.0, 0.1, key="salary_slider")
         else:
             max_salary = 10
 
         if 'WAR_per_M' in df.columns:
-            min_war_per_m = st.slider("Min WAR per $1M", 0.0, 20.0, 2.0, 0.5)
+            min_war_per_m = st.slider("Min WAR per $1M", 0.0, 20.0, 2.0, 0.5, key="war_per_m_slider")
         else:
             min_war_per_m = 0
 
@@ -340,10 +608,10 @@ def render_sidebar(data):
         if not sort_options:
             sort_options = [df.columns[0]]
 
-        sort_by = st.selectbox("Sort by", sort_options)
+        sort_by = st.selectbox("Sort by", sort_options, key="sort_select")
 
         # Number of players
-        top_n = st.number_input("Players to show", 5, 100, 20, 5)
+        top_n = st.number_input("Players to show", 5, 100, 20, 5, key="top_n_input")
 
         st.markdown("---")
         st.metric("Players in view", len(df))
@@ -365,6 +633,7 @@ def render_sidebar(data):
         }
 
         return filters
+
 
 # =============================================================================
 # APPLY FILTERS
@@ -405,11 +674,12 @@ def apply_filters(filters):
 
     return df
 
+
 # =============================================================================
 # VISUALIZATIONS - WITH DYNAMIC COLUMN DETECTION
 # =============================================================================
 def create_scatter_plot(df, centroid):
-    """WAR vs Salary scatter plot"""
+    """WAR vs Salary scatter plot - SIN TÍTULO INTERNO"""
     if 'WAR' not in df.columns or 'salary' not in df.columns:
         return go.Figure()
 
@@ -430,7 +700,7 @@ def create_scatter_plot(df, centroid):
         y='WAR',
         hover_name='Name' if 'Name' in df.columns else None,
         hover_data=hover_data,
-        title='WAR vs Salary',
+        title=None,
         labels={'salary': 'Salary ($M)', 'WAR': 'WAR'},
         color='WAR_per_M' if 'WAR_per_M' in df.columns else None,
         color_continuous_scale='Tealgrn',
@@ -453,14 +723,18 @@ def create_scatter_plot(df, centroid):
     fig.update_layout(
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
-        font_color='#e6f3ff',
-        height=500
+        font_color='white',
+        height=500,
+        xaxis=dict(title_font_color='white', tickfont_color='white'),
+        yaxis=dict(title_font_color='white', tickfont_color='white'),
+        coloraxis_colorbar=dict(title_font_color='white', tickfont_color='white')
     )
 
     return fig
 
+
 def create_radar_chart(player, centroid):
-    """Radar chart comparing player to centroid"""
+    """Radar chart comparing player to centroid - CON TEXTO BLANCO"""
     categories = ['WAR', 'BABIP', 'wOBA', 'ISO']
 
     player_values = []
@@ -501,17 +775,29 @@ def create_radar_chart(player, centroid):
 
     fig.update_layout(
         polar=dict(
-            radialaxis=dict(visible=True, range=[0, 100]),
+            radialaxis=dict(visible=True, range=[0, 100],
+                            tickfont=dict(color='white'),  # Números del eje en blanco
+                            title=dict(text='', font=dict(color='white'))),
+            angularaxis=dict(tickfont=dict(color='white')),  # Etiquetas de categorías en blanco
             bgcolor='rgba(0,0,0,0)'
         ),
         showlegend=True,
+        legend=dict(font=dict(color='white')),  # Leyenda en blanco
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
-        font_color='#e6f3ff',
-        height=400
+        font_color='white',  # Texto general en blanco
+        height=400,
+        title=None  # Sin título interno
+    )
+
+    # Actualizar colores de las líneas de la cuadrícula
+    fig.update_polars(
+        radialaxis_gridcolor='rgba(255,255,255,0.2)',
+        angularaxis_gridcolor='rgba(255,255,255,0.2)'
     )
 
     return fig
+
 
 def create_trend_chart(df, top_n=10):
     """Bar chart of top players"""
@@ -541,8 +827,9 @@ def create_trend_chart(df, top_n=10):
 
     return fig
 
+
 def create_team_distribution(df):
-    """Pie chart of team distribution"""
+    """Pie chart of team distribution - SIN TÍTULO INTERNO"""
     team_cols = [col for col in ['teamID', 'team', 'Team'] if col in df.columns]
     if not team_cols:
         return go.Figure()
@@ -553,21 +840,26 @@ def create_team_distribution(df):
     fig = px.pie(
         values=team_counts.values,
         names=team_counts.index,
-        title='Top Teams',
-        color_discrete_sequence=px.colors.sequential.Tealgrn
+        title=None,
+        color_discrete_sequence=px.colors.sequential.Tealgrn,
+        hole=0.3
     )
 
     fig.update_layout(
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
-        font_color='#e6f3ff',
-        height=400
+        font_color='white',
+        height=400,
+        legend=dict(font_color='white')
     )
+
+    fig.update_traces(textfont_color='white')
 
     return fig
 
+
 def create_year_distribution(df):
-    """Bar chart of year distribution"""
+    """Bar chart of year distribution - SIN TÍTULO INTERNO"""
     year_cols = [col for col in ['yearID', 'Year', 'year'] if col in df.columns]
     if not year_cols:
         return go.Figure()
@@ -578,7 +870,7 @@ def create_year_distribution(df):
     fig = px.bar(
         x=year_counts.index,
         y=year_counts.values,
-        title='Players by Year',
+        title=None,
         labels={'x': 'Year', 'y': 'Count'},
         color=year_counts.values,
         color_continuous_scale='Tealgrn'
@@ -587,11 +879,15 @@ def create_year_distribution(df):
     fig.update_layout(
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
-        font_color='#e6f3ff',
-        height=400
+        font_color='white',
+        height=400,
+        xaxis=dict(title_font_color='white', tickfont_color='white'),
+        yaxis=dict(title_font_color='white', tickfont_color='white'),
+        coloraxis_colorbar=dict(title_font_color='white', tickfont_color='white')
     )
 
     return fig
+
 
 def create_correlation_heatmap(df):
     """Correlation heatmap of metrics"""
@@ -621,8 +917,9 @@ def create_correlation_heatmap(df):
 
     return fig
 
-def create_histogram(df, column, title):
-    """Create histogram for any column"""
+
+def create_histogram(df, column, title=None):
+    """Create histogram for any column - SIN TÍTULO INTERNO"""
     if column not in df.columns:
         return go.Figure()
 
@@ -630,85 +927,132 @@ def create_histogram(df, column, title):
         df,
         x=column,
         nbins=30,
-        title=title,
-        color_discrete_sequence=['#4ecdc4']
+        title=None,
+        color_discrete_sequence=['#4ecdc4'],
+        labels={column: column.replace('_', ' ')}
     )
     fig.update_layout(
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
-        font_color='#e6f3ff'
+        font_color='white',
+        height=400,
+        xaxis=dict(title_font_color='white', tickfont_color='white'),
+        yaxis=dict(title_font_color='white', tickfont_color='white')
     )
     return fig
+
 
 # =============================================================================
 # MAIN APP
 # =============================================================================
 def main():
-    show_loading_screen()
+    # ========== INITIAL LOADING SCREEN ==========
+    if 'initial_loaded' not in st.session_state:
+        # Show professional loading screen
+        show_professional_loading_screen()
+        st.session_state.initial_loaded = True
+        st.rerun()
 
-    with st.spinner(''):
+    # ========== LOAD DATA ==========
+    with st.spinner('Loading data...'):
         data = load_all_data()
 
-    st.markdown('<h1 class="main-title">⚾ UNDERVALUED GEMS SCOUT</h1>', unsafe_allow_html=True)
+    # ========== MAIN TITLE ==========
+    st.markdown("""
+    <h1 class="main-title">
+        <span class="baseball-icon">⚾</span> UNDERVALUED GEMS SCOUT
+    </h1>
+    """, unsafe_allow_html=True)
     st.markdown('<p class="sub-title">Complete Baseball Analytics Platform</p>', unsafe_allow_html=True)
 
+    # ========== SIDEBAR FILTERS ==========
     filters = render_sidebar(data)
 
     if filters is None:
         st.error("No data available. Please check your data files.")
         return
 
+    # ========== APPLY FILTERS ==========
     filtered_df = apply_filters(filters)
 
     if filtered_df.empty:
         st.warning("No players match the selected filters.")
         return
 
-    # Metrics row
+    # ========== WRAP CONTENT FOR ANIMATION ==========
+    st.markdown('<div class="app-content">', unsafe_allow_html=True)
+
+    # ========== METRICS ROW ==========
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        st.markdown('<div class="metric-label">PLAYERS</div>', unsafe_allow_html=True)
-        st.markdown(f'<div class="metric-value">{len(filtered_df)}</div>', unsafe_allow_html=True)
-        st.markdown(f'<div class="metric-delta">in view</div>', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown(f"""
+        <div class='metric-card'>
+            <div class='metric-label'>PLAYERS</div>
+            <div class='metric-value'>{len(filtered_df)}</div>
+            <div class='metric-delta'>in view</div>
+        </div>
+        """, unsafe_allow_html=True)
 
     with col2:
-        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        st.markdown('<div class="metric-label">AVG WAR</div>', unsafe_allow_html=True)
         if 'WAR' in filtered_df.columns and len(filtered_df) > 0:
-            st.markdown(f'<div class="metric-value">{filtered_df["WAR"].mean():.2f}</div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="metric-delta">Max: {filtered_df["WAR"].max():.1f}</div>', unsafe_allow_html=True)
+            st.markdown(f"""
+            <div class='metric-card'>
+                <div class='metric-label'>AVG WAR</div>
+                <div class='metric-value'>{filtered_df['WAR'].mean():.2f}</div>
+                <div class='metric-delta'>Max: {filtered_df['WAR'].max():.1f}</div>
+            </div>
+            """, unsafe_allow_html=True)
         else:
-            st.markdown('<div class="metric-value">N/A</div>', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown(f"""
+            <div class='metric-card'>
+                <div class='metric-label'>AVG WAR</div>
+                <div class='metric-value'>N/A</div>
+                <div class='metric-delta'>—</div>
+            </div>
+            """, unsafe_allow_html=True)
 
     with col3:
-        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        st.markdown('<div class="metric-label">AVG WAR/$M</div>', unsafe_allow_html=True)
         if 'WAR_per_M' in filtered_df.columns and len(filtered_df) > 0:
-            st.markdown(f'<div class="metric-value">{filtered_df["WAR_per_M"].mean():.2f}</div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="metric-delta">Best: {filtered_df["WAR_per_M"].max():.1f}</div>', unsafe_allow_html=True)
+            st.markdown(f"""
+            <div class='metric-card'>
+                <div class='metric-label'>AVG WAR/$M</div>
+                <div class='metric-value'>{filtered_df['WAR_per_M'].mean():.2f}</div>
+                <div class='metric-delta'>Best: {filtered_df['WAR_per_M'].max():.1f}</div>
+            </div>
+            """, unsafe_allow_html=True)
         else:
-            st.markdown('<div class="metric-value">N/A</div>', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown(f"""
+            <div class='metric-card'>
+                <div class='metric-label'>AVG WAR/$M</div>
+                <div class='metric-value'>N/A</div>
+                <div class='metric-delta'>—</div>
+            </div>
+            """, unsafe_allow_html=True)
 
     with col4:
-        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        st.markdown('<div class="metric-label">TEAMS</div>', unsafe_allow_html=True)
         team_cols = [col for col in ['teamID', 'team', 'Team'] if col in filtered_df.columns]
         if team_cols:
             team_col = team_cols[0]
-            st.markdown(f'<div class="metric-value">{filtered_df[team_col].nunique()}</div>', unsafe_allow_html=True)
-            st.markdown('<div class="metric-delta">represented</div>', unsafe_allow_html=True)
+            st.markdown(f"""
+            <div class='metric-card'>
+                <div class='metric-label'>TEAMS</div>
+                <div class='metric-value'>{filtered_df[team_col].nunique()}</div>
+                <div class='metric-delta'>represented</div>
+            </div>
+            """, unsafe_allow_html=True)
         else:
-            st.markdown('<div class="metric-value">N/A</div>', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown(f"""
+            <div class='metric-card'>
+                <div class='metric-label'>TEAMS</div>
+                <div class='metric-value'>N/A</div>
+                <div class='metric-delta'>—</div>
+            </div>
+            """, unsafe_allow_html=True)
 
     st.markdown("---")
 
-    # TABS
+    # ========== TABS WITH UNIQUE KEYS ==========
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "📊 Player Rankings",
         "📈 Visual Analytics",
@@ -718,7 +1062,11 @@ def main():
     ])
 
     with tab1:
-        st.header("🏆 Player Rankings")
+        st.markdown("""
+        <h2 style="color: #a8e6cf; border-bottom: 2px solid rgba(78, 205, 196, 0.3); padding-bottom: 8px;">
+            🏆 Player Rankings
+        </h2>
+        """, unsafe_allow_html=True)
 
         # Table
         display_cols = []
@@ -737,34 +1085,74 @@ def main():
 
             st.dataframe(display_df, use_container_width=True, height=400)
 
-        # Bar chart
-        st.plotly_chart(create_trend_chart(filtered_df, filters['top_n']), use_container_width=True)
+        # Bar chart with unique key
+        st.plotly_chart(create_trend_chart(filtered_df, filters['top_n']),
+                       use_container_width=True,
+                       key="trend_chart_main")
 
     with tab2:
-        st.header("📈 Visual Analytics")
+        st.markdown("""
+        <h2 style="color: #a8e6cf; border-bottom: 2px solid rgba(78, 205, 196, 0.3); padding-bottom: 8px; margin-bottom: 20px;">
+            📈 Visual Analytics
+        </h2>
+        """, unsafe_allow_html=True)
 
+        # Verificar qué gráficos están disponibles
+        has_scatter = 'WAR' in filtered_df.columns and 'salary' in filtered_df.columns
+        has_year = len([col for col in ['yearID', 'Year', 'year'] if col in filtered_df.columns]) > 0
+        has_war_per_m = 'WAR_per_M' in filtered_df.columns
+        has_team = len([col for col in ['teamID', 'team', 'Team'] if col in filtered_df.columns]) > 0
+
+        # PRIMERA FILA - WAR vs Salary
+        if has_scatter:
+            st.markdown('<p class="chart-title">⚾ WAR vs Salary</p>', unsafe_allow_html=True)
+            st.plotly_chart(create_scatter_plot(filtered_df, data['centroid']),
+                           use_container_width=True,
+                           key="scatter_plot_main")
+            st.markdown("<br>", unsafe_allow_html=True)
+        else:
+            st.markdown('<p class="chart-title">⚾ WAR vs Salary</p>', unsafe_allow_html=True)
+            st.info("WAR and Salary data not available for this dataset")
+            st.markdown("<br>", unsafe_allow_html=True)
+
+        # SEGUNDA FILA - Dos columnas
         col1, col2 = st.columns(2)
 
         with col1:
-            st.plotly_chart(create_scatter_plot(filtered_df, data['centroid']), use_container_width=True)
+            st.markdown('<p class="chart-title">📅 Players by Year</p>', unsafe_allow_html=True)
+            if has_year:
+                st.plotly_chart(create_year_distribution(filtered_df),
+                               use_container_width=True,
+                               key="year_dist_main")
+            else:
+                st.info("No year data available")
 
         with col2:
-            st.plotly_chart(create_team_distribution(filtered_df), use_container_width=True)
+            st.markdown('<p class="chart-title">💰 WAR per $1M Distribution</p>', unsafe_allow_html=True)
+            if has_war_per_m:
+                st.plotly_chart(create_histogram(filtered_df, 'WAR_per_M'),
+                               use_container_width=True,
+                               key="hist_war_main")
+            else:
+                st.info("No WAR per $1M data available")
 
-        col3, col4 = st.columns(2)
-
-        with col3:
-            st.plotly_chart(create_year_distribution(filtered_df), use_container_width=True)
-
-        with col4:
-            if 'WAR_per_M' in filtered_df.columns:
-                st.plotly_chart(create_histogram(filtered_df, 'WAR_per_M', 'WAR per $1M Distribution'), use_container_width=True)
+        # TERCERA FILA - Team Distribution
+        if has_team:
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown('<p class="chart-title">🏟️ Top Teams Distribution</p>', unsafe_allow_html=True)
+            st.plotly_chart(create_team_distribution(filtered_df),
+                           use_container_width=True,
+                           key="team_dist_main")
 
     with tab3:
-        st.header("🎯 Player Deep Dive")
+        st.markdown("""
+        <h2 style="color: #a8e6cf; border-bottom: 2px solid rgba(78, 205, 196, 0.3); padding-bottom: 8px;">
+            🎯 Player Deep Dive
+        </h2>
+        """, unsafe_allow_html=True)
 
         if 'Name' in filtered_df.columns and len(filtered_df) > 0:
-            selected = st.selectbox("Select Player", filtered_df['Name'].tolist())
+            selected = st.selectbox("Select Player", filtered_df['Name'].tolist(), key="player_select")
 
             if selected:
                 player = filtered_df[filtered_df['Name'] == selected].iloc[0]
@@ -798,20 +1186,33 @@ def main():
                 with col2:
                     if data['centroid']:
                         fig = create_radar_chart(player, data['centroid'])
-                        st.plotly_chart(fig, use_container_width=True)
+                        st.plotly_chart(fig,
+                                       use_container_width=True,
+                                       key=f"radar_chart_{selected.replace(' ', '_')}")
         else:
             st.info("Select a player to see detailed analysis")
 
     with tab4:
-        st.header("📊 Correlation Analysis")
-        st.plotly_chart(create_correlation_heatmap(filtered_df), use_container_width=True)
+        st.markdown("""
+        <h2 style="color: #a8e6cf; border-bottom: 2px solid rgba(78, 205, 196, 0.3); padding-bottom: 8px;">
+            📊 Correlation Analysis
+        </h2>
+        """, unsafe_allow_html=True)
+
+        st.plotly_chart(create_correlation_heatmap(filtered_df),
+                       use_container_width=True,
+                       key="corr_heatmap_main")
 
         if not data['cluster_stats'].empty:
             st.subheader("Cluster Statistics")
             st.dataframe(data['cluster_stats'], use_container_width=True)
 
     with tab5:
-        st.header("📤 Export Data")
+        st.markdown("""
+        <h2 style="color: #a8e6cf; border-bottom: 2px solid rgba(78, 205, 196, 0.3); padding-bottom: 8px;">
+            📤 Export Data
+        </h2>
+        """, unsafe_allow_html=True)
 
         col1, col2 = st.columns(2)
 
@@ -834,15 +1235,20 @@ def main():
             st.write(f"**Filtered:** {len(filtered_df)} players")
             st.markdown('</div>', unsafe_allow_html=True)
 
-    # Footer
+    # Close content div
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # ========== FOOTER ==========
     total_players = len(data.get('all_players', [])) + len(data.get('full_2025', []))
     st.markdown(f"""
     <div class="footer">
         <p>⚾ Undervalued Gems Scout - Complete Baseball Analytics Platform</p>
         <p>Data: Lahman Database, FanGraphs • Model: K-Means Clustering</p>
         <p>📊 {total_players} total players • {len(data.get('full_2025', []))} 2025 players</p>
+        <p style="font-size: 0.8rem; margin-top: 10px;">v2.0 • Professional Edition</p>
     </div>
     """, unsafe_allow_html=True)
+
 
 if __name__ == "__main__":
     main()
