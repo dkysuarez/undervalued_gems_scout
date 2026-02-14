@@ -755,6 +755,7 @@ def create_radar_chart(player, centroid):
 
     fig = go.Figure()
 
+    # Traza del jugador
     fig.add_trace(go.Scatterpolar(
         r=player_values,
         theta=categories,
@@ -764,6 +765,7 @@ def create_radar_chart(player, centroid):
         fillcolor='rgba(78,205,196,0.3)'
     ))
 
+    # Traza del perfil undervalued
     fig.add_trace(go.Scatterpolar(
         r=centroid_values,
         theta=categories,
@@ -773,34 +775,50 @@ def create_radar_chart(player, centroid):
         fillcolor='rgba(255,107,107,0.3)'
     ))
 
+    # Configuración del layout con TODO en blanco
     fig.update_layout(
         polar=dict(
-            radialaxis=dict(visible=True, range=[0, 100],
-                            tickfont=dict(color='white'),  # Números del eje en blanco
-                            title=dict(text='', font=dict(color='white'))),
-            angularaxis=dict(tickfont=dict(color='white')),  # Etiquetas de categorías en blanco
-            bgcolor='rgba(0,0,0,0)'
+            radialaxis=dict(
+                visible=True,
+                range=[0, 100],
+                tickfont=dict(color='white', size=10),  # Números del eje en blanco
+                gridcolor='rgba(255,255,255,0.2)',  # Grid más suave
+                linecolor='rgba(255,255,255,0.3)'  # Línea del eje
+            ),
+            angularaxis=dict(
+                tickfont=dict(color='white', size=11, weight='bold'),  # Categorías en blanco
+                gridcolor='rgba(255,255,255,0.2)',
+                linecolor='rgba(255,255,255,0.3)'
+            ),
+            bgcolor='rgba(0,0,0,0)'  # Fondo transparente
         ),
         showlegend=True,
-        legend=dict(font=dict(color='white')),  # Leyenda en blanco
+        legend=dict(
+            font=dict(color='white', size=11),  # Leyenda en blanco
+            bgcolor='rgba(0,0,0,0.5)',  # Fondo semi-transparente para la leyenda
+            bordercolor='rgba(255,255,255,0.2)',
+            borderwidth=1,
+            x=0.8,
+            y=1.1
+        ),
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
-        font_color='white',  # Texto general en blanco
-        height=400,
-        title=None  # Sin título interno
+        font=dict(color='white'),  # Texto general en blanco
+        height=450,
+        margin=dict(l=80, r=80, t=40, b=40)  # Márgenes para mejor visualización
     )
 
-    # Actualizar colores de las líneas de la cuadrícula
+    # Actualizar colores de las líneas de la cuadrícula y ejes
     fig.update_polars(
-        radialaxis_gridcolor='rgba(255,255,255,0.2)',
-        angularaxis_gridcolor='rgba(255,255,255,0.2)'
+        radialaxis_gridcolor='rgba(255,255,255,0.15)',
+        angularaxis_gridcolor='rgba(255,255,255,0.15)'
     )
 
     return fig
 
 
 def create_trend_chart(df, top_n=10):
-    """Bar chart of top players"""
+    """Bar chart of top players - SIN TÍTULO INTERNO Y CON TEXTO BLANCO"""
     if 'Name' not in df.columns:
         return go.Figure()
 
@@ -812,17 +830,51 @@ def create_trend_chart(df, top_n=10):
         x='Name',
         y=y_col,
         color=y_col,
-        title=f'Top {top_n} Players',
-        labels={y_col: 'Score'},
-        color_continuous_scale='Tealgrn'
+        title=None,  # QUITAMOS EL TÍTULO INTERNO
+        labels={y_col: 'Score', 'Name': 'Player'},
+        color_continuous_scale='Tealgrn',
+        text=y_col  # Mostrar el valor encima de cada barra
+    )
+
+    fig.update_traces(
+        texttemplate='%{text:.2f}',  # Formato del texto en las barras
+        textposition='outside',       # Posición del texto
+        textfont=dict(color='white', size=10),  # Texto de las barras en blanco
+        marker_line_color='rgba(255,255,255,0.2)',  # Borde de las barras
+        marker_line_width=1,
+        hovertemplate='<b>%{x}</b><br>Score: %{y:.2f}<extra></extra>'  # Tooltip personalizado
     )
 
     fig.update_layout(
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
-        font_color='#e6f3ff',
-        xaxis_tickangle=-45,
-        height=400
+        font=dict(color='white'),  # TODO el texto en blanco
+        height=450,
+        margin=dict(l=50, r=50, t=30, b=100),  # Márgenes ajustados
+        xaxis=dict(
+            title=dict(text='Player', font=dict(color='white')),  # Título del eje X en blanco
+            tickfont=dict(color='white', size=10),  # Nombres de jugadores en blanco
+            tickangle=-45,  # Rotación para que se lean mejor
+            gridcolor='rgba(255,255,255,0.1)',
+            linecolor='rgba(255,255,255,0.3)'
+        ),
+        yaxis=dict(
+            title=dict(text='Score', font=dict(color='white')),  # Título del eje Y en blanco
+            tickfont=dict(color='white'),  # Números del eje Y en blanco
+            gridcolor='rgba(255,255,255,0.1)',
+            linecolor='rgba(255,255,255,0.3)'
+        ),
+        coloraxis_colorbar=dict(
+            title=dict(text='Score', font=dict(color='white')),  # Barra de color
+            tickfont=dict(color='white'),
+            bgcolor='rgba(0,0,0,0.5)',
+            bordercolor='rgba(255,255,255,0.2)'
+        ),
+        hoverlabel=dict(
+            bgcolor='#1a3a4a',  # Fondo del tooltip
+            font=dict(color='white', size=12),  # Texto del tooltip en blanco
+            bordercolor='#4ecdc4'
+        )
     )
 
     return fig
@@ -890,7 +942,7 @@ def create_year_distribution(df):
 
 
 def create_correlation_heatmap(df):
-    """Correlation heatmap of metrics"""
+    """Correlation heatmap of metrics - CON TEXTO BLANCO"""
     corr_cols = ['WAR', 'salary', 'BABIP', 'wOBA', 'ISO', 'K%',
                  'similarity_score', 'composite_score', 'WAR_per_M']
     corr_cols = [col for col in corr_cols if col in df.columns]
@@ -905,14 +957,36 @@ def create_correlation_heatmap(df):
         text_auto='.2f',
         aspect="auto",
         color_continuous_scale='Tealgrn',
-        title="Metric Correlations"
+        title=None  # Sin título interno
     )
 
     fig.update_layout(
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
-        font_color='#e6f3ff',
-        height=500
+        font=dict(color='white'),  # Texto general en blanco
+        height=500,
+        xaxis=dict(
+            tickfont=dict(color='white'),  # Etiquetas del eje X en blanco
+            title_font=dict(color='white'),
+            gridcolor='rgba(255,255,255,0.1)'
+        ),
+        yaxis=dict(
+            tickfont=dict(color='white'),  # Etiquetas del eje Y en blanco
+            title_font=dict(color='white'),
+            gridcolor='rgba(255,255,255,0.1)'
+        ),
+        coloraxis_colorbar=dict(
+            title_font=dict(color='white'),  # Título de la barra de color en blanco
+            tickfont=dict(color='white'),  # Números de la barra en blanco
+            bgcolor='rgba(0,0,0,0.5)',
+            bordercolor='rgba(255,255,255,0.2)'
+        )
+    )
+
+    # Actualizar el color de los números dentro de las celdas
+    fig.update_traces(
+        textfont=dict(color='white', size=10),  # Números en blanco
+        hoverinfo='none'
     )
 
     return fig
@@ -1146,13 +1220,13 @@ def main():
 
     with tab3:
         st.markdown("""
-        <h2 style="color: #a8e6cf; border-bottom: 2px solid rgba(78, 205, 196, 0.3); padding-bottom: 8px;">
+        <h2 style="color: #a8e6cf; border-bottom: 2px solid rgba(78, 205, 196, 0.3); padding-bottom: 8px; margin-bottom: 20px;">
             🎯 Player Deep Dive
         </h2>
         """, unsafe_allow_html=True)
 
         if 'Name' in filtered_df.columns and len(filtered_df) > 0:
-            selected = st.selectbox("Select Player", filtered_df['Name'].tolist(), key="player_select")
+            selected = st.selectbox("Select Player", filtered_df['Name'].tolist(), key="player_select_dive")
 
             if selected:
                 player = filtered_df[filtered_df['Name'] == selected].iloc[0]
@@ -1160,56 +1234,142 @@ def main():
                 col1, col2 = st.columns([1, 1.5])
 
                 with col1:
-                    st.markdown('<div class="metric-card" style="height: auto;">', unsafe_allow_html=True)
-                    st.subheader(f"📋 {selected}")
+                    # SOLO el título del jugador - nada más
+                    st.markdown(f"""
+                    <h3 style="color: white; text-shadow: 0 0 10px rgba(78, 205, 196, 0.5); margin-bottom: 20px;">
+                        📋 {selected}
+                    </h3>
+                    """, unsafe_allow_html=True)
 
-                    # Show available metrics
-                    if 'teamID' in player:
-                        st.write(f"**Team:** {player['teamID']}")
-                    if 'yearID' in player:
-                        st.write(f"**Year:** {player['yearID']}")
-                    if 'WAR' in player:
-                        st.write(f"**WAR:** {player['WAR']:.2f}")
-                    if 'salary' in player:
-                        st.write(f"**Salary:** ${player['salary']:.2f}M")
-                    if 'wOBA' in player:
-                        st.write(f"**wOBA:** {player['wOBA']:.3f}")
-                    if 'BABIP' in player:
-                        st.write(f"**BABIP:** {player['BABIP']:.3f}")
-                    if 'ISO' in player:
-                        st.write(f"**ISO:** {player['ISO']:.3f}")
-                    if 'composite_score' in player:
-                        st.write(f"**Score:** {player['composite_score']:.1f}")
+                    # Crear un contenedor limpio para las métricas
+                    metrics_container = st.container()
 
-                    st.markdown('</div>', unsafe_allow_html=True)
+                    with metrics_container:
+                        # Team (solo si existe)
+                        if 'teamID' in player and pd.notna(player['teamID']):
+                            st.markdown(f"""
+                            <div style='background: rgba(255,255,255,0.06); border-radius: 10px; padding: 10px; border-left: 4px solid #4ecdc4; margin-bottom: 8px;'>
+                                <span style='color: #a8e6cf; font-size: 0.8rem; text-transform: uppercase;'>TEAM</span>
+                                <div style='color: white; font-size: 1.2rem; font-weight: 600;'>{player['teamID']}</div>
+                            </div>
+                            """, unsafe_allow_html=True)
+
+                        # Year (solo si existe)
+                        if 'yearID' in player and pd.notna(player['yearID']):
+                            year_val = int(player['yearID']) if isinstance(player['yearID'], (int, float)) else player[
+                                'yearID']
+                            st.markdown(f"""
+                            <div style='background: rgba(255,255,255,0.06); border-radius: 10px; padding: 10px; border-left: 4px solid #4ecdc4; margin-bottom: 8px;'>
+                                <span style='color: #a8e6cf; font-size: 0.8rem; text-transform: uppercase;'>YEAR</span>
+                                <div style='color: white; font-size: 1.2rem; font-weight: 600;'>{year_val}</div>
+                            </div>
+                            """, unsafe_allow_html=True)
+
+                        # WAR
+                        if 'WAR' in player and pd.notna(player['WAR']):
+                            st.markdown(f"""
+                            <div style='background: rgba(255,255,255,0.06); border-radius: 10px; padding: 10px; border-left: 4px solid #4ecdc4; margin-bottom: 8px;'>
+                                <span style='color: #a8e6cf; font-size: 0.8rem; text-transform: uppercase;'>WAR</span>
+                                <div style='color: white; font-size: 1.2rem; font-weight: 600;'>{player['WAR']:.2f}</div>
+                            </div>
+                            """, unsafe_allow_html=True)
+
+                        # Salary
+                        if 'salary' in player and pd.notna(player['salary']):
+                            st.markdown(f"""
+                            <div style='background: rgba(255,255,255,0.06); border-radius: 10px; padding: 10px; border-left: 4px solid #4ecdc4; margin-bottom: 8px;'>
+                                <span style='color: #a8e6cf; font-size: 0.8rem; text-transform: uppercase;'>SALARY</span>
+                                <div style='color: white; font-size: 1.2rem; font-weight: 600;'>${player['salary']:.2f}M</div>
+                            </div>
+                            """, unsafe_allow_html=True)
+
+                        # wOBA
+                        if 'wOBA' in player and pd.notna(player['wOBA']):
+                            st.markdown(f"""
+                            <div style='background: rgba(255,255,255,0.06); border-radius: 10px; padding: 10px; border-left: 4px solid #4ecdc4; margin-bottom: 8px;'>
+                                <span style='color: #a8e6cf; font-size: 0.8rem; text-transform: uppercase;'>wOBA</span>
+                                <div style='color: white; font-size: 1.2rem; font-weight: 600;'>{player['wOBA']:.3f}</div>
+                            </div>
+                            """, unsafe_allow_html=True)
+
+                        # BABIP
+                        if 'BABIP' in player and pd.notna(player['BABIP']):
+                            st.markdown(f"""
+                            <div style='background: rgba(255,255,255,0.06); border-radius: 10px; padding: 10px; border-left: 4px solid #4ecdc4; margin-bottom: 8px;'>
+                                <span style='color: #a8e6cf; font-size: 0.8rem; text-transform: uppercase;'>BABIP</span>
+                                <div style='color: white; font-size: 1.2rem; font-weight: 600;'>{player['BABIP']:.3f}</div>
+                            </div>
+                            """, unsafe_allow_html=True)
+
+                        # ISO
+                        if 'ISO' in player and pd.notna(player['ISO']):
+                            st.markdown(f"""
+                            <div style='background: rgba(255,255,255,0.06); border-radius: 10px; padding: 10px; border-left: 4px solid #4ecdc4; margin-bottom: 8px;'>
+                                <span style='color: #a8e6cf; font-size: 0.8rem; text-transform: uppercase;'>ISO</span>
+                                <div style='color: white; font-size: 1.2rem; font-weight: 600;'>{player['ISO']:.3f}</div>
+                            </div>
+                            """, unsafe_allow_html=True)
 
                 with col2:
+                    st.markdown("""
+                    <h3 style="color: white; text-shadow: 0 0 10px rgba(78, 205, 196, 0.5); margin-bottom: 20px; text-align: center;">
+                        📊 Player Profile Comparison
+                    </h3>
+                    """, unsafe_allow_html=True)
+
                     if data['centroid']:
                         fig = create_radar_chart(player, data['centroid'])
                         st.plotly_chart(fig,
-                                       use_container_width=True,
-                                       key=f"radar_chart_{selected.replace(' ', '_')}")
+                                        use_container_width=True,
+                                        key=f"radar_chart_{selected.replace(' ', '_')}")
+                    else:
+                        st.info("Centroid data not available for comparison")
         else:
             st.info("Select a player to see detailed analysis")
 
     with tab4:
         st.markdown("""
-        <h2 style="color: #a8e6cf; border-bottom: 2px solid rgba(78, 205, 196, 0.3); padding-bottom: 8px;">
+        <h2 style="color: #a8e6cf; border-bottom: 2px solid rgba(78, 205, 196, 0.3); padding-bottom: 8px; margin-bottom: 20px;">
             📊 Correlation Analysis
         </h2>
         """, unsafe_allow_html=True)
 
-        st.plotly_chart(create_correlation_heatmap(filtered_df),
-                       use_container_width=True,
-                       key="corr_heatmap_main")
+        # Heatmap de correlaciones
+        fig = create_correlation_heatmap(filtered_df)
+        if fig.data:  # Si hay datos en el gráfico
+            st.plotly_chart(fig,
+                            use_container_width=True,
+                            key="corr_heatmap_main")
+        else:
+            st.info("Insufficient data for correlation analysis")
 
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # Cluster Statistics
         if not data['cluster_stats'].empty:
-            st.subheader("Cluster Statistics")
-            st.dataframe(data['cluster_stats'], use_container_width=True)
+            st.markdown("""
+            <h3 style="color: white; text-shadow: 0 0 10px rgba(78, 205, 196, 0.5); margin-bottom: 15px; font-size: 1.3rem;">
+                📊 Cluster Statistics
+            </h3>
+            """, unsafe_allow_html=True)
+
+            # Mostrar el dataframe con estilo personalizado
+            st.dataframe(
+                data['cluster_stats'],
+                use_container_width=True,
+                height=300
+            )
+        else:
+            st.markdown("""
+            <h3 style="color: white; text-shadow: 0 0 10px rgba(78, 205, 196, 0.5); margin-bottom: 15px; font-size: 1.3rem;">
+                📊 Cluster Statistics
+            </h3>
+            """, unsafe_allow_html=True)
+            st.info("No cluster statistics available")
 
     with tab5:
         st.markdown("""
-        <h2 style="color: #a8e6cf; border-bottom: 2px solid rgba(78, 205, 196, 0.3); padding-bottom: 8px;">
+        <h2 style="color: #a8e6cf; border-bottom: 2px solid rgba(78, 205, 196, 0.3); padding-bottom: 8px; margin-bottom: 20px;">
             📤 Export Data
         </h2>
         """, unsafe_allow_html=True)
@@ -1217,23 +1377,84 @@ def main():
         col1, col2 = st.columns(2)
 
         with col1:
-            st.markdown('<div class="metric-card" style="height: auto;">', unsafe_allow_html=True)
-            st.subheader("Export Current View")
+            # Card Export Current View
+            st.markdown(f"""
+            <div style='
+                background: rgba(255, 255, 255, 0.06);
+                backdrop-filter: blur(10px);
+                border-radius: 25px;
+                padding: 25px;
+                border: 1px solid rgba(78, 205, 196, 0.2);
+                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+                text-align: center;
+                margin: 10px 0;
+            '>
+                <div style='font-size: 1.3rem; color: #a8e6cf; margin-bottom: 20px; font-weight: 600;'>
+                    📥 Export Current View
+                </div>
+                <div style='font-size: 1rem; color: white; margin-bottom: 15px;'>
+                    <span style='color: #a8e6cf;'>Rows:</span> {len(filtered_df)} players
+                </div>
+            """, unsafe_allow_html=True)
 
+            # Botón de descarga
             csv = filtered_df.to_csv(index=False)
             b64 = base64.b64encode(csv.encode()).decode()
-            href = f'<a href="data:file/csv;base64,{b64}" download="baseball_data.csv" style="color: #4ecdc4;">📥 Download CSV</a>'
-            st.markdown(href, unsafe_allow_html=True)
-            st.markdown(f"**Rows:** {len(filtered_df)}")
-            st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown(f'''
+            <div style='margin: 20px 0; text-align: center;'>
+                <a href="data:file/csv;base64,{b64}" download="baseball_data.csv" 
+                   style="
+                        display: inline-block;
+                        background: linear-gradient(135deg, #4ecdc4, #45b7d1);
+                        color: white;
+                        padding: 12px 30px;
+                        border-radius: 30px;
+                        text-decoration: none;
+                        font-weight: 600;
+                        font-size: 1.1rem;
+                        box-shadow: 0 5px 15px rgba(78, 205, 196, 0.3);
+                        transition: all 0.3s ease;
+                        border: none;
+                   "
+                   onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 25px rgba(78, 205, 196, 0.5)';"
+                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 5px 15px rgba(78, 205, 196, 0.3)';">
+                    📥 Download CSV
+                </a>
+            </div>
+            </div>
+            ''', unsafe_allow_html=True)
 
         with col2:
-            st.markdown('<div class="metric-card" style="height: auto;">', unsafe_allow_html=True)
-            st.subheader("Dataset Info")
-            st.write(f"**Dataset:** {filters['dataset']}")
-            st.write(f"**Total:** {len(filters['df'])} players")
-            st.write(f"**Filtered:** {len(filtered_df)} players")
-            st.markdown('</div>', unsafe_allow_html=True)
+            # Card Dataset Info
+            st.markdown(f"""
+            <div style='
+                background: rgba(255, 255, 255, 0.06);
+                backdrop-filter: blur(10px);
+                border-radius: 25px;
+                padding: 25px;
+                border: 1px solid rgba(78, 205, 196, 0.2);
+                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+                margin: 10px 0;
+            '>
+                <div style='font-size: 1.3rem; color: #a8e6cf; margin-bottom: 20px; font-weight: 600; text-align: center;'>
+                    📋 Dataset Info
+                </div>
+                <div style='margin-bottom: 15px;'>
+                    <div style='display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid rgba(78, 205, 196, 0.2);'>
+                        <span style='color: #a8e6cf; font-size: 0.95rem;'>Dataset:</span>
+                        <span style='color: white; font-size: 1rem; font-weight: 500;'>{filters['dataset']}</span>
+                    </div>
+                    <div style='display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid rgba(78, 205, 196, 0.2);'>
+                        <span style='color: #a8e6cf; font-size: 0.95rem;'>Total Players:</span>
+                        <span style='color: white; font-size: 1rem; font-weight: 500;'>{len(filters['df'])}</span>
+                    </div>
+                    <div style='display: flex; justify-content: space-between; padding: 10px;'>
+                        <span style='color: #a8e6cf; font-size: 0.95rem;'>Filtered Players:</span>
+                        <span style='color: white; font-size: 1rem; font-weight: 500;'>{len(filtered_df)}</span>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
     # Close content div
     st.markdown('</div>', unsafe_allow_html=True)
