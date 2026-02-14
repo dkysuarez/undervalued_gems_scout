@@ -1,15 +1,6 @@
 """
 app.py - Undervalued Gems Scout Interactive Dashboard
-
-A professional Streamlit dashboard for baseball scouting analytics.
-Identifies undervalued players using clustering and similarity scores.
-
-Features:
-- 🎯 Interactive filters (team, year, score threshold)
-- 📊 Animated loading screen with baseball animation
-- 📈 Professional visualizations (scatter, radar, bar charts)
-- ⚾ Baseball-themed design with green/blue color scheme
-- 💾 Export functionality for scouting reports
+WITH DYNAMIC COLUMN DETECTION - CORREGIDO
 """
 
 import streamlit as st
@@ -34,357 +25,308 @@ st.set_page_config(
 )
 
 # =============================================================================
-# CUSTOM CSS - Baseball theme with green/blue elegance
+# CUSTOM CSS
 # =============================================================================
 st.markdown("""
 <style>
-    /* Main background and text */
     .stApp {
         background: linear-gradient(135deg, #0a1928 0%, #1a3a4a 100%);
-        color: #e6f3ff;
+        min-height: 100vh;
     }
     
-    /* Headers */
-    h1, h2, h3 {
-        color: #4ecdc4 !important;
-        font-family: 'Helvetica Neue', sans-serif;
-        font-weight: 300;
-        letter-spacing: 1px;
-    }
-    
-    /* Main title */
     .main-title {
-        font-size: 3.5rem;
+        font-size: 3.8rem;
         background: linear-gradient(120deg, #4ecdc4, #45b7d1);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         text-align: center;
-        padding: 20px;
-        font-weight: 700;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-    }
-    
-    /* Subtitle */
-    .sub-title {
-        text-align: center;
-        color: #a8e6cf;
-        font-size: 1.2rem;
-        margin-bottom: 30px;
-        font-style: italic;
-    }
-    
-    /* Cards for metrics */
-    .metric-card {
-        background: rgba(255,255,255,0.1);
-        backdrop-filter: blur(10px);
-        border-radius: 15px;
-        padding: 20px;
-        border: 1px solid rgba(78, 205, 196, 0.3);
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-    }
-    
-    /* Dataframes */
-    .dataframe {
-        background: rgba(10, 25, 40, 0.8) !important;
-        color: #e6f3ff !important;
-        border-radius: 10px;
-    }
-    
-    /* Sidebar */
-    .css-1d391kg {
-        background: linear-gradient(180deg, #0f2a3a 0%, #1a3a4a 100%);
-    }
-    
-    /* Buttons */
-    .stButton > button {
-        background: linear-gradient(90deg, #4ecdc4, #45b7d1);
-        color: white;
-        border: none;
-        border-radius: 25px;
-        padding: 10px 25px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-    }
-    
-    .stButton > button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 20px rgba(78, 205, 196, 0.4);
-    }
-    
-    /* Sliders */
-    .stSlider > div > div > div {
-        background: linear-gradient(90deg, #4ecdc4, #45b7d1);
-    }
-    
-    /* Select boxes */
-    .stSelectbox > div > div {
-        background: rgba(255,255,255,0.1);
-        color: #e6f3ff;
-        border: 1px solid #4ecdc4;
-    }
-    
-    /* Loading animation */
-    .loading-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 400px;
-        flex-direction: column;
-    }
-    
-    .baseball-loader {
-        width: 100px;
-        height: 100px;
-        position: relative;
-        animation: bounce 1s infinite;
-    }
-    
-    .baseball {
-        width: 100%;
-        height: 100%;
-        background: white;
-        border-radius: 50%;
-        position: relative;
-        overflow: hidden;
-        box-shadow: 0 0 20px rgba(78, 205, 196, 0.5);
-        animation: roll 2s linear infinite;
-    }
-    
-    .baseball::before {
-        content: '';
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        background: repeating-linear-gradient(
-            45deg,
-            #ff4444 0px,
-            #ff4444 10px,
-            white 10px,
-            white 20px
-        );
-        clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%);
-        animation: spin 2s linear infinite;
-    }
-    
-    .baseball::after {
-        content: '';
-        position: absolute;
-        width: 100%;
-        height: 2px;
-        background: #ff4444;
-        top: 50%;
-        transform: translateY(-50%);
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-    
-    @keyframes roll {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-    
-    @keyframes bounce {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-20px); }
-    }
-    
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-    
-    .loading-text {
-        margin-top: 30px;
-        font-size: 1.2rem;
-        color: #4ecdc4;
-        animation: pulse 1.5s infinite;
-    }
-    
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
-    }
-    
-    /* Glowing effect for cards */
-    .glow-card {
+        padding: 20px 0 5px 0;
+        font-weight: 800;
+        margin-bottom: 0px;
         animation: glow 3s infinite;
     }
     
     @keyframes glow {
-        0% { box-shadow: 0 0 5px #4ecdc4; }
-        50% { box-shadow: 0 0 20px #4ecdc4; }
-        100% { box-shadow: 0 0 5px #4ecdc4; }
+        0% { text-shadow: 0 0 20px rgba(78, 205, 196, 0.3); }
+        50% { text-shadow: 0 0 40px rgba(78, 205, 196, 0.6); }
+        100% { text-shadow: 0 0 20px rgba(78, 205, 196, 0.3); }
     }
     
-    /* Footer */
+    .sub-title {
+        text-align: center;
+        color: #a8e6cf !important;
+        font-size: 1.3rem;
+        margin-bottom: 40px;
+        font-style: italic;
+    }
+    
+    .metric-card {
+        background: rgba(255, 255, 255, 0.06);
+        backdrop-filter: blur(10px);
+        border-radius: 25px;
+        padding: 25px 15px;
+        border: 1px solid rgba(78, 205, 196, 0.2);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        text-align: center;
+        transition: all 0.4s ease;
+        height: 170px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        margin: 10px 0;
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 45px rgba(78, 205, 196, 0.25);
+        border: 1px solid rgba(78, 205, 196, 0.5);
+        background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .metric-label {
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        color: #a8e6cf !important;
+        margin-bottom: 12px;
+    }
+    
+    .metric-value {
+        font-size: 3rem;
+        font-weight: 800;
+        color: white !important;
+        line-height: 1.2;
+        text-shadow: 0 0 20px rgba(78, 205, 196, 0.5);
+        margin-bottom: 5px;
+    }
+    
+    .metric-delta {
+        font-size: 0.9rem;
+        color: #4ecdc4 !important;
+    }
+    
+    .sidebar-header {
+        color: #4ecdc4 !important;
+        font-size: 1.1rem;
+        font-weight: 600;
+        letter-spacing: 2px;
+        margin-top: 20px;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        border-bottom: 1px solid rgba(78, 205, 196, 0.3);
+        padding-bottom: 5px;
+    }
+    
     .footer {
         text-align: center;
-        padding: 20px;
-        color: #a8e6cf;
+        padding: 30px 20px 10px 20px;
+        color: rgba(168, 230, 207, 0.6) !important;
         font-size: 0.9rem;
-        border-top: 1px solid rgba(78, 205, 196, 0.3);
-        margin-top: 50px;
+        border-top: 1px solid rgba(78, 205, 196, 0.15);
+        margin-top: 60px;
+    }
+    
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+        background: transparent;
+        padding: 10px 0;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 30px;
+        padding: 10px 25px;
+        color: #a8e6cf !important;
+        border: 1px solid rgba(78, 205, 196, 0.2);
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background: linear-gradient(90deg, #4ecdc4, #45b7d1) !important;
+        color: white !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # =============================================================================
-# ANIMATED LOADING SCREEN
+# LOADING SCREEN
 # =============================================================================
 def show_loading_screen():
-    """Display an animated baseball loading screen"""
-    loading_placeholder = st.empty()
-
-    with loading_placeholder.container():
+    loading = st.empty()
+    with loading.container():
         st.markdown("""
-        <div class="loading-container">
-            <div class="baseball-loader">
-                <div class="baseball"></div>
+        <div style="display: flex; justify-content: center; align-items: center; height: 500px; flex-direction: column;">
+            <div style="width: 150px; height: 150px; position: relative; animation: bounce 1.2s infinite;">
+                <div style="width: 100%; height: 100%; background: white; border-radius: 50%; 
+                    position: relative; overflow: hidden; box-shadow: 0 0 40px rgba(78, 205, 196, 0.8); 
+                    animation: roll 2.5s linear infinite;"></div>
             </div>
-            <div class="loading-text">Loading scouting data...</div>
-            <div class="loading-text" style="font-size: 1rem; margin-top: 10px;">
-                Analyzing 2025 season statistics
+            <div style="margin-top: 40px; font-size: 1.5rem; color: #4ecdc4; animation: pulse 1.8s infinite;">
+                UNDERVALUED GEMS SCOUT
             </div>
+            <div style="color: #a8e6cf; margin-top: 20px;">Loading baseball analytics...</div>
         </div>
+        <style>
+            @keyframes roll { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+            @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-30px); } }
+            @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.7; } }
+        </style>
         """, unsafe_allow_html=True)
 
-    # Simulate loading with progress bar
-    progress_bar = st.progress(0)
+    progress = st.progress(0)
     for i in range(100):
         time.sleep(0.02)
-        progress_bar.progress(i + 1)
+        progress.progress(i + 1)
 
-    loading_placeholder.empty()
-    progress_bar.empty()
+    loading.empty()
+    progress.empty()
 
 # =============================================================================
-# DATA LOADING FUNCTIONS
+# LOAD ALL DATA
 # =============================================================================
 @st.cache_data
-def load_data():
-    """Load all necessary data files with flexible column naming"""
+def load_all_data():
+    """Load ALL available data files"""
     data_dir = os.path.join(os.path.dirname(__file__), '..', 'data')
+    analysis_dir = os.path.join(data_dir, 'analysis')
 
-    # Load top undervalued 2025 players
-    top_2025_path = os.path.join(data_dir, 'top_undervalued_2025.csv')
-    if os.path.exists(top_2025_path):
-        df_2025 = pd.read_csv(top_2025_path)
+    data = {}
+
+    # 1. Top undervalued 2025
+    top_path = os.path.join(data_dir, 'top_undervalued_2025.csv')
+    if os.path.exists(top_path):
+        data['top_2025'] = pd.read_csv(top_path)
+        st.sidebar.success(f"✅ Loaded top_2025: {len(data['top_2025'])} players")
     else:
-        # Fallback to main file
-        top_path = os.path.join(data_dir, 'top_undervalued_players.csv')
-        df_2025 = pd.read_csv(top_path)
+        data['top_2025'] = pd.DataFrame()
+        st.sidebar.warning("⚠️ top_undervalued_2025.csv not found")
 
-    # STANDARDIZE COLUMN NAMES
-    # Create a mapping of possible column names to standard names
-    column_mapping = {
-        'teamID': ['teamID', 'team', 'Team', 'TeamID', 'team_id'],
-        'Name': ['Name', 'name', 'playerName', 'PlayerName', 'player_name'],
-        'WAR': ['WAR', 'war', 'WinsAboveReplacement'],
-        'salary': ['salary', 'Salary', 'sal'],
-        'composite_score': ['composite_score', 'CompositeScore', 'score', 'Score'],
-        'similarity_score': ['similarity_score', 'SimilarityScore', 'similarity'],
-        'trend_score': ['trend_score', 'TrendScore', 'trend']
-    }
+    # 2. Full 2025 analysis
+    full_path = os.path.join(analysis_dir, 'players_2025_analysis.csv')
+    if os.path.exists(full_path):
+        data['full_2025'] = pd.read_csv(full_path)
+        st.sidebar.success(f"✅ Loaded full_2025: {len(data['full_2025'])} players")
+    else:
+        data['full_2025'] = pd.DataFrame()
 
-    # Rename columns to standard names
-    rename_dict = {}
-    for std_name, possible_names in column_mapping.items():
-        for col in df_2025.columns:
-            if col in possible_names:
-                rename_dict[col] = std_name
-                break
+    # 3. All historical players
+    all_path = os.path.join(analysis_dir, 'all_players_with_clusters.csv')
+    if os.path.exists(all_path):
+        data['all_players'] = pd.read_csv(all_path)
+        st.sidebar.success(f"✅ Loaded historical: {len(data['all_players'])} players")
+    else:
+        data['all_players'] = pd.DataFrame()
 
-    df_2025 = df_2025.rename(columns=rename_dict)
+    # 4. Cluster statistics
+    stats_path = os.path.join(analysis_dir, 'cluster_statistics.csv')
+    if os.path.exists(stats_path):
+        data['cluster_stats'] = pd.read_csv(stats_path)
 
-    # If teamID still doesn't exist, create a placeholder
-    if 'teamID' not in df_2025.columns:
-        df_2025['teamID'] = 'Unknown'
-
-    # If salary is missing or all zeros, use a default
-    if 'salary' not in df_2025.columns or df_2025['salary'].sum() == 0:
-        df_2025['salary'] = np.random.uniform(0.3, 0.8, len(df_2025))
-
-    # Load centroid
-    centroid_path = os.path.join(data_dir, 'analysis', 'undervalued_centroid.csv')
+    # 5. Centroid
+    centroid_path = os.path.join(analysis_dir, 'undervalued_centroid.csv')
     if os.path.exists(centroid_path):
-        centroid = pd.read_csv(centroid_path).iloc[0].to_dict()
+        data['centroid'] = pd.read_csv(centroid_path).iloc[0].to_dict()
     else:
-        centroid = {
-            'WAR': 2.69,
-            'salary': 0.41,
-            'BABIP': 0.300,
-            'wOBA': 0.350,
-            'ISO': 0.180,
-            'K%': 20.0
-        }
+        data['centroid'] = {}
 
-    # Load full 2025 analysis
-    full_2025_path = os.path.join(data_dir, 'analysis', 'players_2025_analysis.csv')
-    if os.path.exists(full_2025_path):
-        df_full = pd.read_csv(full_2025_path)
-        # Apply same standardization
-        df_full = df_full.rename(columns=rename_dict)
-    else:
-        df_full = df_2025.copy()
+    return data
 
-    return df_2025, df_full, centroid
+# =============================================================================
+# GET AVAILABLE COLUMNS (HELPER FUNCTION)
+# =============================================================================
+def get_available_columns(df, column_list):
+    """Return only columns that exist in the dataframe"""
+    return [col for col in column_list if col in df.columns]
 
 # =============================================================================
 # SIDEBAR FILTERS
 # =============================================================================
-def render_sidebar(df):
-    """Render sidebar with all filters"""
+def render_sidebar(data):
     with st.sidebar:
         st.markdown("## ⚾ Filters")
         st.markdown("---")
 
-        # Team filter - with error handling
-        if 'teamID' in df.columns and len(df['teamID'].dropna().unique()) > 0:
-            teams = ['All Teams'] + sorted(df['teamID'].dropna().unique().tolist())
+        # Dataset selector
+        st.markdown('<div class="sidebar-header">📋 DATASET</div>', unsafe_allow_html=True)
+        dataset_options = []
+        if not data['top_2025'].empty:
+            dataset_options.append("Top 50 - 2025")
+        if not data['full_2025'].empty:
+            dataset_options.append("All 2025 Players")
+        if not data['all_players'].empty:
+            dataset_options.append("Historical (All Years)")
+
+        if not dataset_options:
+            st.error("No datasets found!")
+            return None
+
+        selected_dataset = st.selectbox("Select Dataset", dataset_options)
+
+        # Get current df
+        if selected_dataset == "Top 50 - 2025":
+            df = data['top_2025'].copy()
+        elif selected_dataset == "All 2025 Players":
+            df = data['full_2025'].copy()
         else:
-            teams = ['All Teams']
-            df['teamID'] = 'Unknown'
+            df = data['all_players'].copy()
 
-        selected_team = st.selectbox(
-            "Select Team",
-            teams,
-            help="Filter players by team"
-        )
+        # Calculate WAR_per_M if possible
+        if 'WAR' in df.columns and 'salary' in df.columns:
+            df['WAR_per_M'] = df['WAR'] / (df['salary'] + 0.1)
 
-        # Score threshold
-        if 'composite_score' in df.columns:
-            min_score = st.slider(
-                "Minimum Composite Score",
-                min_value=0,
-                max_value=100,
-                value=50,
-                help="Higher score = better undervalued candidate"
-            )
+        # Team filter - CHECK IF COLUMN EXISTS
+        st.markdown('<div class="sidebar-header">🏟️ TEAM</div>', unsafe_allow_html=True)
+        team_cols = get_available_columns(df, ['teamID', 'team', 'Team', 'teamId'])
+        if team_cols:
+            team_col = team_cols[0]
+            teams = ['All Teams'] + sorted(df[team_col].dropna().unique().tolist())
+            selected_team = st.selectbox("Team", teams)
         else:
-            min_score = 0
+            selected_team = 'All Teams'
+            st.info("No team data available")
 
-        # WAR threshold
+        # Year filter
+        st.markdown('<div class="sidebar-header">📅 YEAR</div>', unsafe_allow_html=True)
+        year_cols = get_available_columns(df, ['yearID', 'Year', 'year'])
+        if year_cols:
+            year_col = year_cols[0]
+            years = sorted(df[year_col].unique())
+            selected_year = st.selectbox("Year", ['All Years'] + years)
+        else:
+            selected_year = 'All Years'
+
+        # Metric filters
+        st.markdown('<div class="sidebar-header">📊 METRICS</div>', unsafe_allow_html=True)
+
         if 'WAR' in df.columns:
-            min_war = st.slider(
-                "Minimum WAR",
-                min_value=0.0,
-                max_value=10.0,
-                value=1.0,
-                step=0.5,
-                help="Wins Above Replacement minimum"
-            )
+            min_war = st.slider("Min WAR", 0.0, float(df['WAR'].max()), 1.0, 0.5)
         else:
             min_war = 0
 
-        # Number of players to display
-        top_n = st.number_input(
-            "Number of Players",
-            min_value=5,
-            max_value=100,
-            value=20,
-            step=5
-        )
+        if 'wOBA' in df.columns:
+            wOBA_min = st.slider("Min wOBA", 0.200, 0.500, 0.300, 0.010, format="%.3f")
+        else:
+            wOBA_min = 0
 
-        # Sort by - determine available columns
+        if 'BABIP' in df.columns:
+            babip_min = st.slider("Min BABIP", 0.200, 0.400, 0.200, 0.010, format="%.3f")
+        else:
+            babip_min = 0
+
+        # Price filters
+        st.markdown('<div class="sidebar-header">💰 PRICE</div>', unsafe_allow_html=True)
+
+        if 'salary' in df.columns:
+            max_salary = st.slider("Max Salary ($M)", 0.0, float(df['salary'].max()), 2.0, 0.1)
+        else:
+            max_salary = 10
+
+        if 'WAR_per_M' in df.columns:
+            min_war_per_m = st.slider("Min WAR per $1M", 0.0, 20.0, 2.0, 0.5)
+        else:
+            min_war_per_m = 0
+
+        # Sort by
+        st.markdown('<div class="sidebar-header">📈 SORT BY</div>', unsafe_allow_html=True)
         sort_options = []
         if 'composite_score' in df.columns:
             sort_options.append('composite_score')
@@ -392,131 +334,140 @@ def render_sidebar(df):
             sort_options.append('WAR')
         if 'similarity_score' in df.columns:
             sort_options.append('similarity_score')
-        if 'trend_score' in df.columns:
-            sort_options.append('trend_score')
+        if 'WAR_per_M' in df.columns:
+            sort_options.append('WAR_per_M')
 
         if not sort_options:
-            sort_options = [df.columns[0]]  # fallback
+            sort_options = [df.columns[0]]
 
-        sort_by = st.selectbox(
-            "Sort By",
-            sort_options,
-            format_func=lambda x: {
-                'composite_score': 'Composite Score',
-                'WAR': 'WAR',
-                'similarity_score': 'Similarity to Profile',
-                'trend_score': 'Improvement Trend'
-            }.get(x, x)
-        )
+        sort_by = st.selectbox("Sort by", sort_options)
+
+        # Number of players
+        top_n = st.number_input("Players to show", 5, 100, 20, 5)
 
         st.markdown("---")
-        st.markdown("### 📊 Quick Stats")
+        st.metric("Players in view", len(df))
 
-        # Display some quick stats
-        st.metric(
-            "Total Players",
-            len(df),
-            delta=f"{len(df[df['composite_score'] > 70]) if 'composite_score' in df.columns else 0} elite"
-        )
-
-        if selected_team != 'All Teams' and 'teamID' in df.columns:
-            team_count = len(df[df['teamID'] == selected_team])
-            st.metric(f"{selected_team} Players", team_count)
-
-        st.markdown("---")
-        st.markdown("### 🎯 About")
-        st.markdown("""
-        **Undervalued Gems Scout** identifies players with:
-        - High performance (WAR)
-        - Low salary
-        - Improving trends
-        - Similarity to proven undervalued profiles
-        """)
-
-        return {
+        filters = {
+            'dataset': selected_dataset,
+            'df': df,
             'team': selected_team,
-            'min_score': min_score,
+            'team_col': team_cols[0] if team_cols else None,
+            'year': selected_year,
+            'year_col': year_cols[0] if year_cols else None,
             'min_war': min_war,
-            'top_n': top_n,
-            'sort_by': sort_by
+            'wOBA_min': wOBA_min,
+            'babip_min': babip_min,
+            'max_salary': max_salary,
+            'min_war_per_m': min_war_per_m,
+            'sort_by': sort_by,
+            'top_n': top_n
         }
 
+        return filters
+
 # =============================================================================
-# VISUALIZATIONS
+# APPLY FILTERS
+# =============================================================================
+def apply_filters(filters):
+    if filters is None:
+        return pd.DataFrame()
+
+    df = filters['df'].copy()
+
+    # Team filter
+    if filters['team'] != 'All Teams' and filters['team_col'] and filters['team_col'] in df.columns:
+        df = df[df[filters['team_col']] == filters['team']]
+
+    # Year filter
+    if filters['year'] != 'All Years' and filters['year_col'] and filters['year_col'] in df.columns:
+        df = df[df[filters['year_col']] == filters['year']]
+
+    # Metric filters
+    if 'WAR' in df.columns:
+        df = df[df['WAR'] >= filters['min_war']]
+
+    if 'wOBA' in df.columns:
+        df = df[df['wOBA'] >= filters['wOBA_min']]
+
+    if 'BABIP' in df.columns:
+        df = df[df['BABIP'] >= filters['babip_min']]
+
+    if 'salary' in df.columns:
+        df = df[df['salary'] <= filters['max_salary']]
+
+    if 'WAR_per_M' in df.columns:
+        df = df[df['WAR_per_M'] >= filters['min_war_per_m']]
+
+    # Sort
+    if filters['sort_by'] in df.columns:
+        df = df.sort_values(filters['sort_by'], ascending=False)
+
+    return df
+
+# =============================================================================
+# VISUALIZATIONS - WITH DYNAMIC COLUMN DETECTION
 # =============================================================================
 def create_scatter_plot(df, centroid):
-    """Create WAR vs Salary scatter plot"""
+    """WAR vs Salary scatter plot"""
     if 'WAR' not in df.columns or 'salary' not in df.columns:
-        # Create dummy figure
-        fig = go.Figure()
-        fig.add_annotation(text="WAR or salary data not available",
-                          xref="paper", yref="paper", showarrow=False)
-        return fig
+        return go.Figure()
+
+    # Build hover data dynamically
+    hover_data = {}
+    if 'teamID' in df.columns:
+        hover_data['teamID'] = True
+    if 'yearID' in df.columns:
+        hover_data['yearID'] = True
+    if 'wOBA' in df.columns:
+        hover_data['wOBA'] = ':.3f'
+    if 'BABIP' in df.columns:
+        hover_data['BABIP'] = ':.3f'
 
     fig = px.scatter(
         df,
         x='salary',
         y='WAR',
-        size='composite_score' if 'composite_score' in df.columns else None,
-        color='composite_score' if 'composite_score' in df.columns else None,
         hover_name='Name' if 'Name' in df.columns else None,
-        hover_data={
-            'teamID': True,
-            'WAR': ':.2f',
-            'salary': ':.2f',
-            'composite_score': ':.1f' if 'composite_score' in df.columns else None,
-            'similarity_score': ':.1f' if 'similarity_score' in df.columns else None
-        },
-        title='WAR vs Salary - 2025 Players',
-        labels={
-            'salary': 'Salary (Millions $)',
-            'WAR': 'Wins Above Replacement',
-            'composite_score': 'Score'
-        },
+        hover_data=hover_data,
+        title='WAR vs Salary',
+        labels={'salary': 'Salary ($M)', 'WAR': 'WAR'},
+        color='WAR_per_M' if 'WAR_per_M' in df.columns else None,
         color_continuous_scale='Tealgrn',
-        size_max=30
+        size='WAR' if 'WAR' in df.columns else None,
+        size_max=15
     )
 
-    # Add centroid marker
-    fig.add_trace(
-        go.Scatter(
-            x=[centroid.get('salary', 0.41)],
-            y=[centroid.get('WAR', 2.69)],
-            mode='markers',
-            marker=dict(
-                symbol='x',
-                size=20,
-                color='red',
-                line=dict(width=2, color='white')
-            ),
-            name='Profile Centroid',
-            hovertemplate='Undervalued Profile<br>WAR: %{y:.2f}<br>Salary: $%{x:.2f}M<extra></extra>'
+    # Add centroid if available
+    if centroid and 'WAR' in centroid and 'salary' in centroid:
+        fig.add_trace(
+            go.Scatter(
+                x=[centroid['salary']],
+                y=[centroid['WAR']],
+                mode='markers',
+                marker=dict(symbol='x', size=20, color='red', line=dict(width=2, color='white')),
+                name='Profile Centroid'
+            )
         )
-    )
 
     fig.update_layout(
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
         font_color='#e6f3ff',
-        title_font_color='#4ecdc4',
-        hovermode='closest'
+        height=500
     )
-
-    fig.update_xaxes(gridcolor='rgba(78,205,196,0.2)')
-    fig.update_yaxes(gridcolor='rgba(78,205,196,0.2)')
 
     return fig
 
 def create_radar_chart(player, centroid):
-    """Create radar chart comparing player to centroid"""
+    """Radar chart comparing player to centroid"""
     categories = ['WAR', 'BABIP', 'wOBA', 'ISO']
 
-    # Normalize values
     player_values = []
     centroid_values = []
 
     for cat in categories:
-        if cat in player and cat in centroid and not pd.isna(player.get(cat)):
+        if cat in player and cat in centroid:
             max_val = max(player[cat], centroid[cat])
             if max_val > 0:
                 player_values.append(player[cat] / max_val * 100)
@@ -550,55 +501,33 @@ def create_radar_chart(player, centroid):
 
     fig.update_layout(
         polar=dict(
-            radialaxis=dict(
-                visible=True,
-                range=[0, 100],
-                gridcolor='rgba(78,205,196,0.2)'
-            ),
+            radialaxis=dict(visible=True, range=[0, 100]),
             bgcolor='rgba(0,0,0,0)'
         ),
         showlegend=True,
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
         font_color='#e6f3ff',
-        title=f"{player.get('Name', 'Player')} - Profile Comparison"
+        height=400
     )
 
     return fig
 
 def create_trend_chart(df, top_n=10):
-    """Create bar chart of top players by score"""
-    if 'composite_score' not in df.columns:
-        fig = go.Figure()
-        fig.add_annotation(text="Score data not available",
-                          xref="paper", yref="paper", showarrow=False)
-        return fig
-
-    score_col = 'composite_score'
+    """Bar chart of top players"""
+    if 'Name' not in df.columns:
+        return go.Figure()
 
     top_df = df.head(top_n).copy()
-    if 'Name' in top_df.columns:
-        top_df['display_name'] = top_df['Name'].apply(lambda x: str(x)[:15] + '...' if len(str(x)) > 15 else str(x))
-    else:
-        top_df['display_name'] = f"Player {top_df.index}"
+    y_col = 'composite_score' if 'composite_score' in df.columns else 'WAR' if 'WAR' in df.columns else df.columns[0]
 
     fig = px.bar(
         top_df,
-        x='display_name',
-        y=score_col,
-        color=score_col,
-        hover_name='Name' if 'Name' in top_df.columns else None,
-        hover_data={
-            'WAR': ':.2f' if 'WAR' in top_df.columns else None,
-            'salary': ':.2f' if 'salary' in top_df.columns else None,
-            'similarity_score': ':.1f' if 'similarity_score' in top_df.columns else None,
-            'trend_score': ':.1f' if 'trend_score' in top_df.columns else None
-        },
-        title=f'Top {top_n} Undervalued Players - 2025',
-        labels={
-            'display_name': '',
-            score_col: 'Score (0-100)'
-        },
+        x='Name',
+        y=y_col,
+        color=y_col,
+        title=f'Top {top_n} Players',
+        labels={y_col: 'Score'},
         color_continuous_scale='Tealgrn'
     )
 
@@ -606,29 +535,25 @@ def create_trend_chart(df, top_n=10):
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
         font_color='#e6f3ff',
-        title_font_color='#4ecdc4',
-        xaxis_tickangle=-45
+        xaxis_tickangle=-45,
+        height=400
     )
-
-    fig.update_xaxes(gridcolor='rgba(78,205,196,0.2)')
-    fig.update_yaxes(gridcolor='rgba(78,205,196,0.2)')
 
     return fig
 
 def create_team_distribution(df):
-    """Create pie chart of team distribution"""
-    if 'teamID' not in df.columns:
-        fig = go.Figure()
-        fig.add_annotation(text="Team data not available",
-                          xref="paper", yref="paper", showarrow=False)
-        return fig
+    """Pie chart of team distribution"""
+    team_cols = [col for col in ['teamID', 'team', 'Team'] if col in df.columns]
+    if not team_cols:
+        return go.Figure()
 
-    team_counts = df['teamID'].value_counts().head(10)
+    team_col = team_cols[0]
+    team_counts = df[team_col].value_counts().head(8)
 
     fig = px.pie(
         values=team_counts.values,
         names=team_counts.index,
-        title='Top 10 Teams - Undervalued Players',
+        title='Top Teams',
         color_discrete_sequence=px.colors.sequential.Tealgrn
     )
 
@@ -636,143 +561,183 @@ def create_team_distribution(df):
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
         font_color='#e6f3ff',
-        title_font_color='#4ecdc4'
+        height=400
     )
 
+    return fig
+
+def create_year_distribution(df):
+    """Bar chart of year distribution"""
+    year_cols = [col for col in ['yearID', 'Year', 'year'] if col in df.columns]
+    if not year_cols:
+        return go.Figure()
+
+    year_col = year_cols[0]
+    year_counts = df[year_col].value_counts().sort_index()
+
+    fig = px.bar(
+        x=year_counts.index,
+        y=year_counts.values,
+        title='Players by Year',
+        labels={'x': 'Year', 'y': 'Count'},
+        color=year_counts.values,
+        color_continuous_scale='Tealgrn'
+    )
+
+    fig.update_layout(
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        font_color='#e6f3ff',
+        height=400
+    )
+
+    return fig
+
+def create_correlation_heatmap(df):
+    """Correlation heatmap of metrics"""
+    corr_cols = ['WAR', 'salary', 'BABIP', 'wOBA', 'ISO', 'K%',
+                 'similarity_score', 'composite_score', 'WAR_per_M']
+    corr_cols = [col for col in corr_cols if col in df.columns]
+
+    if len(corr_cols) < 2:
+        return go.Figure()
+
+    corr_matrix = df[corr_cols].corr()
+
+    fig = px.imshow(
+        corr_matrix,
+        text_auto='.2f',
+        aspect="auto",
+        color_continuous_scale='Tealgrn',
+        title="Metric Correlations"
+    )
+
+    fig.update_layout(
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        font_color='#e6f3ff',
+        height=500
+    )
+
+    return fig
+
+def create_histogram(df, column, title):
+    """Create histogram for any column"""
+    if column not in df.columns:
+        return go.Figure()
+
+    fig = px.histogram(
+        df,
+        x=column,
+        nbins=30,
+        title=title,
+        color_discrete_sequence=['#4ecdc4']
+    )
+    fig.update_layout(
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        font_color='#e6f3ff'
+    )
     return fig
 
 # =============================================================================
 # MAIN APP
 # =============================================================================
 def main():
-    # Show loading screen
     show_loading_screen()
 
-    # Load data
-    with st.spinner('Loading scouting database...'):
-        df_top, df_full, centroid = load_data()
+    with st.spinner(''):
+        data = load_all_data()
 
-    # Main title
     st.markdown('<h1 class="main-title">⚾ UNDERVALUED GEMS SCOUT</h1>', unsafe_allow_html=True)
-    st.markdown('<p class="sub-title">Moneyball Analytics for the 2025 Season</p>', unsafe_allow_html=True)
+    st.markdown('<p class="sub-title">Complete Baseball Analytics Platform</p>', unsafe_allow_html=True)
 
-    # Render sidebar and get filters
-    filters = render_sidebar(df_top)
+    filters = render_sidebar(data)
 
-    # Apply filters
-    filtered_df = df_top.copy()
+    if filters is None:
+        st.error("No data available. Please check your data files.")
+        return
 
-    if filters['team'] != 'All Teams' and 'teamID' in filtered_df.columns:
-        filtered_df = filtered_df[filtered_df['teamID'] == filters['team']]
+    filtered_df = apply_filters(filters)
 
-    if 'composite_score' in filtered_df.columns:
-        filtered_df = filtered_df[filtered_df['composite_score'] >= filters['min_score']]
+    if filtered_df.empty:
+        st.warning("No players match the selected filters.")
+        return
 
-    if 'WAR' in filtered_df.columns:
-        filtered_df = filtered_df[filtered_df['WAR'] >= filters['min_war']]
-
-    if filters['sort_by'] in filtered_df.columns:
-        filtered_df = filtered_df.sort_values(filters['sort_by'], ascending=False)
-
-    # =============================================================================
-    # TOP METRICS ROW
-    # =============================================================================
+    # Metrics row
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
         st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        st.metric(
-            "Total Players",
-            len(filtered_df),
-            delta=f"{len(df_top) - len(filtered_df)} filtered out"
-        )
+        st.markdown('<div class="metric-label">PLAYERS</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="metric-value">{len(filtered_df)}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="metric-delta">in view</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col2:
         st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        if 'WAR' in filtered_df.columns:
-            st.metric(
-                "Avg WAR",
-                f"{filtered_df['WAR'].mean():.2f}",
-                delta=f"{filtered_df['WAR'].max():.1f} max"
-            )
+        st.markdown('<div class="metric-label">AVG WAR</div>', unsafe_allow_html=True)
+        if 'WAR' in filtered_df.columns and len(filtered_df) > 0:
+            st.markdown(f'<div class="metric-value">{filtered_df["WAR"].mean():.2f}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="metric-delta">Max: {filtered_df["WAR"].max():.1f}</div>', unsafe_allow_html=True)
         else:
-            st.metric("Avg WAR", "N/A")
+            st.markdown('<div class="metric-value">N/A</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col3:
         st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        if 'composite_score' in filtered_df.columns:
-            st.metric(
-                "Avg Score",
-                f"{filtered_df['composite_score'].mean():.1f}",
-                delta=f"{filtered_df['composite_score'].max():.1f} max"
-            )
+        st.markdown('<div class="metric-label">AVG WAR/$M</div>', unsafe_allow_html=True)
+        if 'WAR_per_M' in filtered_df.columns and len(filtered_df) > 0:
+            st.markdown(f'<div class="metric-value">{filtered_df["WAR_per_M"].mean():.2f}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="metric-delta">Best: {filtered_df["WAR_per_M"].max():.1f}</div>', unsafe_allow_html=True)
         else:
-            st.metric("Avg Score", "N/A")
+            st.markdown('<div class="metric-value">N/A</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col4:
         st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        if 'teamID' in filtered_df.columns:
-            st.metric(
-                "Teams Represented",
-                filtered_df['teamID'].nunique()
-            )
+        st.markdown('<div class="metric-label">TEAMS</div>', unsafe_allow_html=True)
+        team_cols = [col for col in ['teamID', 'team', 'Team'] if col in filtered_df.columns]
+        if team_cols:
+            team_col = team_cols[0]
+            st.markdown(f'<div class="metric-value">{filtered_df[team_col].nunique()}</div>', unsafe_allow_html=True)
+            st.markdown('<div class="metric-delta">represented</div>', unsafe_allow_html=True)
         else:
-            st.metric("Teams Represented", "N/A")
+            st.markdown('<div class="metric-value">N/A</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("---")
 
-    # =============================================================================
-    # MAIN CONTENT TABS
-    # =============================================================================
-    tab1, tab2, tab3, tab4 = st.tabs([
+    # TABS
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "📊 Player Rankings",
         "📈 Visual Analytics",
         "🎯 Player Deep Dive",
+        "📊 Correlations",
         "📤 Export Data"
     ])
 
     with tab1:
-        st.header("🏆 Top Undervalued Players - 2025")
+        st.header("🏆 Player Rankings")
 
-        # Display top players table
+        # Table
         display_cols = []
-        if 'Name' in filtered_df.columns:
-            display_cols.append('Name')
-        if 'teamID' in filtered_df.columns:
-            display_cols.append('teamID')
-        if 'WAR' in filtered_df.columns:
-            display_cols.append('WAR')
-        if 'salary' in filtered_df.columns:
-            display_cols.append('salary')
-        if 'similarity_score' in filtered_df.columns:
-            display_cols.append('similarity_score')
-        if 'trend_score' in filtered_df.columns:
-            display_cols.append('trend_score')
-        if 'composite_score' in filtered_df.columns:
-            display_cols.append('composite_score')
+        for col in ['Name', 'teamID', 'yearID', 'WAR', 'salary', 'wOBA', 'BABIP', 'ISO', 'WAR_per_M', 'composite_score']:
+            if col in filtered_df.columns:
+                display_cols.append(col)
 
         if display_cols:
             display_df = filtered_df[display_cols].head(filters['top_n']).copy()
 
-            # Format columns
+            # Format
             if 'salary' in display_df.columns:
                 display_df['salary'] = display_df['salary'].apply(lambda x: f"${x:.2f}M")
-            if 'similarity_score' in display_df.columns:
-                display_df['similarity_score'] = display_df['similarity_score'].apply(lambda x: f"{x:.1f}%")
-            if 'composite_score' in display_df.columns:
-                display_df['composite_score'] = display_df['composite_score'].apply(lambda x: f"{x:.1f}")
+            if 'WAR_per_M' in display_df.columns:
+                display_df['WAR_per_M'] = display_df['WAR_per_M'].apply(lambda x: f"{x:.2f}")
 
-            st.dataframe(
-                display_df,
-                use_container_width=True,
-                height=400
-            )
+            st.dataframe(display_df, use_container_width=True, height=400)
 
-        # Bar chart of top players
+        # Bar chart
         st.plotly_chart(create_trend_chart(filtered_df, filters['top_n']), use_container_width=True)
 
     with tab2:
@@ -781,144 +746,101 @@ def main():
         col1, col2 = st.columns(2)
 
         with col1:
-            st.plotly_chart(create_scatter_plot(filtered_df, centroid), use_container_width=True)
+            st.plotly_chart(create_scatter_plot(filtered_df, data['centroid']), use_container_width=True)
 
         with col2:
             st.plotly_chart(create_team_distribution(filtered_df), use_container_width=True)
 
-        # Correlation heatmap
-        st.subheader("🔍 Metric Correlations")
+        col3, col4 = st.columns(2)
 
-        corr_cols = ['WAR', 'salary', 'BABIP', 'wOBA', 'ISO', 'K%',
-                    'similarity_score', 'composite_score']
-        corr_cols = [col for col in corr_cols if col in filtered_df.columns]
+        with col3:
+            st.plotly_chart(create_year_distribution(filtered_df), use_container_width=True)
 
-        if len(corr_cols) > 1:
-            corr_matrix = filtered_df[corr_cols].corr()
-
-            fig = px.imshow(
-                corr_matrix,
-                text_auto='.2f',
-                aspect="auto",
-                color_continuous_scale='Tealgrn',
-                title="Feature Correlations"
-            )
-
-            fig.update_layout(
-                plot_bgcolor='rgba(0,0,0,0)',
-                paper_bgcolor='rgba(0,0,0,0)',
-                font_color='#e6f3ff',
-                height=500
-            )
-
-            st.plotly_chart(fig, use_container_width=True)
+        with col4:
+            if 'WAR_per_M' in filtered_df.columns:
+                st.plotly_chart(create_histogram(filtered_df, 'WAR_per_M', 'WAR per $1M Distribution'), use_container_width=True)
 
     with tab3:
         st.header("🎯 Player Deep Dive")
 
-        # Player selector
-        if 'Name' in filtered_df.columns:
-            selected_player = st.selectbox(
-                "Select Player for Detailed Analysis",
-                filtered_df['Name'].tolist()
-            )
+        if 'Name' in filtered_df.columns and len(filtered_df) > 0:
+            selected = st.selectbox("Select Player", filtered_df['Name'].tolist())
 
-            if selected_player:
-                player_data = filtered_df[filtered_df['Name'] == selected_player].iloc[0]
+            if selected:
+                player = filtered_df[filtered_df['Name'] == selected].iloc[0]
 
-                col1, col2 = st.columns([1, 2])
+                col1, col2 = st.columns([1, 1.5])
 
                 with col1:
-                    st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-                    st.subheader(f"📋 {selected_player}")
+                    st.markdown('<div class="metric-card" style="height: auto;">', unsafe_allow_html=True)
+                    st.subheader(f"📋 {selected}")
 
-                    if 'teamID' in player_data:
-                        st.markdown(f"**Team:** {player_data['teamID']}")
-                    if 'WAR' in player_data:
-                        st.markdown(f"**WAR:** {player_data['WAR']:.2f}")
-                    if 'salary' in player_data:
-                        st.markdown(f"**Salary:** ${player_data['salary']:.2f}M")
-                    if 'similarity_score' in player_data:
-                        st.markdown(f"**Similarity Score:** {player_data['similarity_score']:.1f}%")
-                    if 'trend_score' in player_data:
-                        st.markdown(f"**Trend Score:** {player_data['trend_score']:.1f}")
-                    if 'composite_score' in player_data:
-                        st.markdown(f"**Composite Score:** {player_data['composite_score']:.1f}")
+                    # Show available metrics
+                    if 'teamID' in player:
+                        st.write(f"**Team:** {player['teamID']}")
+                    if 'yearID' in player:
+                        st.write(f"**Year:** {player['yearID']}")
+                    if 'WAR' in player:
+                        st.write(f"**WAR:** {player['WAR']:.2f}")
+                    if 'salary' in player:
+                        st.write(f"**Salary:** ${player['salary']:.2f}M")
+                    if 'wOBA' in player:
+                        st.write(f"**wOBA:** {player['wOBA']:.3f}")
+                    if 'BABIP' in player:
+                        st.write(f"**BABIP:** {player['BABIP']:.3f}")
+                    if 'ISO' in player:
+                        st.write(f"**ISO:** {player['ISO']:.3f}")
+                    if 'composite_score' in player:
+                        st.write(f"**Score:** {player['composite_score']:.1f}")
 
                     st.markdown('</div>', unsafe_allow_html=True)
 
-                    # Recommendation
-                    if 'composite_score' in player_data:
-                        if player_data['composite_score'] > 70:
-                            st.success("🔥 ELITE PROSPECT - Strong undervalued candidate")
-                        elif player_data['composite_score'] > 50:
-                            st.info("📈 Promising player with upside")
-                        else:
-                            st.warning("🔍 Monitor - Needs more development")
-
                 with col2:
-                    # Radar chart comparison
-                    fig = create_radar_chart(player_data, centroid)
-                    st.plotly_chart(fig, use_container_width=True)
+                    if data['centroid']:
+                        fig = create_radar_chart(player, data['centroid'])
+                        st.plotly_chart(fig, use_container_width=True)
         else:
-            st.warning("Player names not available in data")
+            st.info("Select a player to see detailed analysis")
 
     with tab4:
+        st.header("📊 Correlation Analysis")
+        st.plotly_chart(create_correlation_heatmap(filtered_df), use_container_width=True)
+
+        if not data['cluster_stats'].empty:
+            st.subheader("Cluster Statistics")
+            st.dataframe(data['cluster_stats'], use_container_width=True)
+
+    with tab5:
         st.header("📤 Export Data")
 
         col1, col2 = st.columns(2)
 
         with col1:
-            st.markdown('<div class="metric-card">', unsafe_allow_html=True)
+            st.markdown('<div class="metric-card" style="height: auto;">', unsafe_allow_html=True)
             st.subheader("Export Current View")
 
-            # Convert to CSV
             csv = filtered_df.to_csv(index=False)
             b64 = base64.b64encode(csv.encode()).decode()
-            href = f'<a href="data:file/csv;base64,{b64}" download="undervalued_players_2025.csv">📥 Download CSV (Current Filters)</a>'
+            href = f'<a href="data:file/csv;base64,{b64}" download="baseball_data.csv" style="color: #4ecdc4;">📥 Download CSV</a>'
             st.markdown(href, unsafe_allow_html=True)
-
-            st.markdown("---")
-            st.markdown("**File includes:**")
-            st.markdown(f"- {len(filtered_df)} players")
-            st.markdown(f"- Filters: {filters['team']}, Score ≥ {filters['min_score']}")
+            st.markdown(f"**Rows:** {len(filtered_df)}")
             st.markdown('</div>', unsafe_allow_html=True)
 
         with col2:
-            st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-            st.subheader("Scouting Report")
-
-            if st.button("Generate Scouting Report"):
-                # Create a simple report
-                report = f"""
-                # Undervalued Gems Scouting Report
-                Date: {datetime.now().strftime('%Y-%m-%d')}
-                
-                ## Top 5 Recommendations
-                """
-
-                for i, (_, player) in enumerate(filtered_df.head(5).iterrows()):
-                    report += f"""
-                    
-                    {i+1}. **{player.get('Name', 'Unknown')}** ({player.get('teamID', 'Unknown')})
-                       - WAR: {player.get('WAR', 0):.2f}
-                       - Salary: ${player.get('salary', 0):.2f}M
-                       - Score: {player.get('composite_score', 0):.1f}
-                       - Similarity: {player.get('similarity_score', 0):.1f}%
-                    """
-
-                st.text(report)
+            st.markdown('<div class="metric-card" style="height: auto;">', unsafe_allow_html=True)
+            st.subheader("Dataset Info")
+            st.write(f"**Dataset:** {filters['dataset']}")
+            st.write(f"**Total:** {len(filters['df'])} players")
+            st.write(f"**Filtered:** {len(filtered_df)} players")
             st.markdown('</div>', unsafe_allow_html=True)
 
-    # =============================================================================
-    # FOOTER
-    # =============================================================================
-    st.markdown("---")
-    st.markdown("""
+    # Footer
+    total_players = len(data.get('all_players', [])) + len(data.get('full_2025', []))
+    st.markdown(f"""
     <div class="footer">
-        <p>⚾ Undervalued Gems Scout - Moneyball Analytics for the Modern Era</p>
-        <p>Data: Lahman Database, FanGraphs | Model: K-Means Clustering | Dashboard: Streamlit</p>
-        <p style="font-size: 0.8rem; opacity: 0.7;">© 2026 - Scouting Edition</p>
+        <p>⚾ Undervalued Gems Scout - Complete Baseball Analytics Platform</p>
+        <p>Data: Lahman Database, FanGraphs • Model: K-Means Clustering</p>
+        <p>📊 {total_players} total players • {len(data.get('full_2025', []))} 2025 players</p>
     </div>
     """, unsafe_allow_html=True)
 
