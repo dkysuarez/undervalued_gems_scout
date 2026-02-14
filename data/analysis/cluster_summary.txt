@@ -1,0 +1,27 @@
+============================================================
+CLUSTER ANALYSIS SUMMARY
+============================================================
+
+Undervalued Cluster: 0.0
+Total players analyzed: 4793
+
+Cluster Statistics:
+----------------------------------------
+   cluster  count        pct   avg_WAR  avg_salary  avg_BABIP  avg_wOBA   avg_ISO    avg_K%  avg_value_ratio  total_war  total_salary
+0        0   1415  29.522220  2.687633    0.409738   0.301908  0.336195  0.184122  0.202196         5.272574     3803.0    579.779574
+2        2    159   3.317338  1.838994   15.801045   0.206811  0.233698  0.125094  0.121258         0.115652      292.4   2512.366176
+1        1   3219  67.160442 -0.000124    0.293138   0.000073  0.000077  0.000026  0.000023        -0.000316       -0.4    943.612642
+
+Top 10 Undervalued Players:
+----------------------------------------
+            Name  yearID   WAR  salary  value_ratio
+0    Aaron Judge    2024  11.3     0.0        113.0
+1    Aaron Judge    2022  11.1     0.0        111.0
+2   Mookie Betts    2018  10.2     0.0        102.0
+3    Aaron Judge    2025  10.1     0.0        101.0
+4     Mike Trout    2018   9.4     0.0         94.0
+5    Cal Raleigh    2025   9.1     0.0         91.0
+6  Shohei Ohtani    2024   8.9     0.0         89.0
+7    Aaron Judge    2017   8.7     0.0         87.0
+8      Juan Soto    2024   8.3     0.0         83.0
+9   Alex Bregman    2019   8.3     0.0         83.0
