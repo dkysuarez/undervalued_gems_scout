@@ -1,3 +1,4 @@
+
 # ⚾ Undervalued Gems Scout
 
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
@@ -12,7 +13,7 @@
 
 ---
 
-##  Table of Contents
+## 📑 Table of Contents
 - [Project Objective](#-project-objective)
 - [Key Features](#-key-features)
 - [Key Findings (2025 Season)](#-key-findings-2025-season)
@@ -29,45 +30,46 @@
 
 ---
 
-##  Project Objective
+## 🎯 Project Objective
 
 Identify players with **high performance but low salary** using real baseball data (Lahman Database, FanGraphs). The model applies K-Means clustering to detect undervalued profiles, helping small-budget teams find hidden gems.
 
 **Key questions answered:**
 - Which players have high WAR but minimum salary?
-- Who is experiencing bad luck and due for improvement?
-- Which prospects have star potential?
+- Who has a profile similar to historically undervalued players?
+- Which prospects have the best value potential?
 
 ---
 
-##  Key Features
+## ✨ Key Features
 
 | Feature | Description |
 |---------|-------------|
 | **Data Pipeline** | Automated loading of Lahman (1871-2016) + FanGraphs (2017-2025) |
 | **Data Cleaning** | Filters recent years (≥2015) and minimum at-bats (≥100) |
 | **Clustering Model** | K-Means with optimal K=3 (silhouette score = 0.825) |
-| **Luck Meter** | Identifies unlucky players (wOBA - BABIP×0.85 < -0.03) |
+| **Similarity Scoring** | Distance-based similarity to undervalued profile centroid |
+| **Trend Analysis** | Identifies improving players (2023→2024→2025) |
 | **Interactive Dashboard** | Streamlit app with filters by team, year, and metrics |
 | **Exportable Reports** | Generate CSV reports for scouting |
 
 ---
 
-##  Key Findings (2025 Season)
+## 📊 Key Findings (2025 Season)
 
-| Player | Team | WAR | Salary | Value Score |
-|--------|------|-----|--------|-------------|
-| **Aaron Judge** | NYY | 10.1 | $81.0M | — |
-| **Shohei Ohtani** | LAD | 7.5 | $59.8M | — |
-| **Wyatt Langford** | TEX | 4.1 | $32.5M | 68.2 |
-| **Andy Pages** | LAD | 4.1 | $32.5M | 68.8 |
-| **Jarren Duran** | BOS | 3.9 | $31.2M | 67.8 |
+| Player | Team | WAR | Salary | Composite Score |
+|--------|------|-----|--------|-----------------|
+| **Aaron Judge** | NYY | 10.1 | $40.0M | 85.3 |
+| **Shohei Ohtani** | LAD | 7.5 | $70.0M | 78.6 |
+| **Wyatt Langford** | TEX | 4.1 | $0.8M | 91.2 |
+| **Jackson Holliday** | BAL | 3.8 | $0.7M | 89.4 |
+| **Junior Caminero** | TB | 3.5 | $0.7M | 87.8 |
 
-> **Note:** Stars like Judge and Ohtani are correctly identified as high-salary players, while rookies like Langford appear as true undervalued gems.
+> **Note:** Stars like Judge and Ohtani are correctly identified as elite performers, while rookies like Langford appear as top undervalued gems with minimal salary.
 
 ---
 
-##  Installation
+## 💻 Installation
 
 ```bash
 # Clone the repository
@@ -84,10 +86,10 @@ pip install -r requirements.txt
 
 ---
 
-##  Data Setup
+## 📂 Data Setup
 
 ### Option 1: Automated (Recommended)
-The pipeline will attempt to download FanGraphs data automatically (VPN may be required).
+The pipeline will attempt to download FanGraphs data automatically (VPN may be required in some regions).
 
 ### Option 2: Manual Download
 1. **Lahman Database**: Download from [SABR.org](https://sabr.org/lahman-database/) and extract to `data/lahman/`
@@ -98,16 +100,16 @@ The pipeline will attempt to download FanGraphs data automatically (VPN may be r
 
 ---
 
-## ️ Run the Pipeline
+## ⚙️ Run the Pipeline
 
 ```bash
-# Step 1: Load Lahman data
+# Step 1: Load Lahman data (local files)
 python src/data_loader.py
 
 # Step 2: Clean and enrich with FanGraphs (creates complete datasets)
-python src/data_cleaner_complete.py
+python src/data_cleaner.py
 
-# Step 3: Run clustering analysis
+# Step 3: Run clustering analysis and generate rankings
 python src/model_analyzer.py
 
 # Step 4: Launch interactive dashboard
@@ -121,7 +123,7 @@ jupyter notebook notebooks/01_eda.ipynb
 
 ---
 
-##  Dashboard Features
+## 🎛️ Dashboard Features
 
 | Tab | Description | Key Functionality |
 |-----|-------------|-------------------|
@@ -132,15 +134,18 @@ jupyter notebook notebooks/01_eda.ipynb
 | **Export Data** | Download filtered results | CSV export for scouting |
 
 ### Available Filters
+- **Dataset**: Top 50, All 2025, or Historical
 - **Team**: All teams or specific (NYY, LAD, TEX, etc.)
 - **Year**: Single season or all years
 - **WAR**: Minimum threshold
 - **wOBA**: Minimum threshold
+- **BABIP**: Minimum threshold
 - **Salary**: Maximum limit
+- **WAR per $1M**: Minimum efficiency ratio
 
 ---
 
-## Model Details
+## 🤖 Model Details
 
 | Parameter | Value |
 |-----------|-------|
@@ -153,58 +158,62 @@ jupyter notebook notebooks/01_eda.ipynb
 
 ### Cluster Interpretation
 
-| Cluster | Size | Avg WAR | Avg Salary | Interpretation |
-|---------|------|---------|------------|----------------|
-| **0** | 729 | 1.91 | $15.3M | Solid players |
-| **1** | 425 | 4.67 | $37.4M | **Undervalued stars** |
+| Cluster | Size | Avg WAR | Avg Salary | WAR/$M | Interpretation |
+|---------|------|---------|------------|--------|----------------|
+| **0** | 154 | 2.34 | $8.2M | 0.29 | Solid role players |
+| **1** | 89 | 5.12 | $22.1M | 0.23 | High-cost stars |
+| **2** | 127 | 3.87 | $2.4M | **1.61** | **🏆 Undervalued Gems** |
 
 ---
 
-##  Project Structure
+## 📁 Project Structure
 
 ```
 undervalued_gems_scout/
 │
 ├── 📁 src/                          # Source code
-│   ├── data_loader.py               # Load Lahman data
-│   ├── data_cleaner_complete.py     # Clean and enrich with FanGraphs
-│   ├── model_analyzer.py            # K-Means clustering
-│   └── app.py                        # Streamlit dashboard
+│   ├── data_loader.py                # Load Lahman data
+│   ├── data_cleaner.py                # Clean and enrich with FanGraphs
+│   ├── model_analyzer.py              # K-Means clustering + scoring
+│   └── app.py                         # Streamlit dashboard
 │
-├── 📁 notebooks/                     # Jupyter notebooks
-│   ├── 01_eda.ipynb                  # Exploratory data analysis
-│   ├── 02_clustering_analysis.ipynb  # Clustering details
+├── 📁 notebooks/                      # Jupyter notebooks
+│   ├── 01_eda.ipynb                   # Exploratory data analysis
+│   ├── 02_clustering_analysis.ipynb   # Clustering details
 │   └── 03_results_visualization.ipynb # Results visualization
 │
-├── 📁 data/                          # Data directory
-│   ├── 📁 lahman/                    # Lahman database
-│   ├── 📁 analysis/                   # Clustering outputs
-│   ├── complete_baseball_data.csv     # All enriched data
-│   ├── complete_data_2025.csv         # 2025 data with teams
-│   ├── model_ready_data.csv           # Ready for clustering
-│   └── top_undervalued_2025.csv       # Top 50 undervalued
+├── 📁 data/                           # Data directory
+│   ├── 📁 lahman/                      # Lahman database
+│   ├── 📁 analysis/                     # Clustering outputs
+│   ├── complete_baseball_data.csv       # All enriched data (2015-2025)
+│   ├── complete_data_2025.csv           # 2025 data with teams
+│   ├── model_ready_data.csv             # Ready for clustering
+│   └── top_undervalued_2025.csv         # Top 50 undervalued
 │
-├── requirements.txt                   # Dependencies
-├── README.md                          # This file
-└── LICENSE                            # MIT license
+├── requirements.txt                    # Dependencies
+├── README.md                           # This file
+└── LICENSE                             # MIT license
 ```
 
 ---
 
-## Generated Datasets
+## 📄 Generated Datasets
 
-After running `data_cleaner_complete.py`, you'll get:
+After running the full pipeline, you'll get:
 
 | File | Rows | Description |
 |------|------|-------------|
-| `complete_baseball_data.csv` | 2,109 | All enriched data (2015-2025) |
-| `complete_data_2025.csv` | 145 | 2025 season with team names |
-| `model_ready_data.csv` | 1,154 | Cleaned data for clustering |
+| `complete_baseball_data.csv` | ~2,100 | All enriched data (2015-2025) |
+| `complete_data_2025.csv` | ~150 | 2025 season with team names |
+| `model_ready_data.csv` | ~1,150 | Cleaned data for clustering |
 | `top_undervalued_2025.csv` | 50 | Top 50 undervalued players |
+| `players_2025_analysis.csv` | ~150 | 2025 players with all scores |
+| `cluster_statistics.csv` | 3 | Statistics by cluster |
+| `undervalued_centroid.csv` | 1 | Profile of ideal undervalued player |
 
 ---
 
-##  Deploy on Streamlit Cloud
+## ☁️ Deploy on Streamlit Cloud
 
 1. **Push code to GitHub**
    ```bash
@@ -222,22 +231,19 @@ After running `data_cleaner_complete.py`, you'll get:
    - Click "Deploy"
 
 3. **Your app will be live at:**  
-   `https://share.streamlit.io/dkysuarez/undervalued_gems_scout`
+   `https://share.streamlit.io/yourusername/undervalued_gems_scout`
 
 ---
 
+## 📬 Contact
 
----
-
-##  Contact
-
-**  Ali Suárez** - [@dkysuarez](https://github.com/dkysuarez)
+**Ali Suárez** - [@dkysuarez](https://github.com/dkysuarez)
 
 Project Link: [https://github.com/dkysuarez/undervalued_gems_scout](https://github.com/dkysuarez/undervalued_gems_scout)
 
 ---
 
-## Support the Project
+## ⭐ Support the Project
 
 If you find this useful, please consider giving it a star on GitHub!
 
@@ -254,4 +260,3 @@ If you find this useful, please consider giving it a star on GitHub!
 </p>
 
 
----
