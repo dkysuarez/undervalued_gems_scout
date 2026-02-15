@@ -252,6 +252,6 @@ If you find this useful, please consider giving it a star on GitHub!
   <br>
   © 2026 - Professional Scouting Edition
 </p>
-```
+
 
 ---
