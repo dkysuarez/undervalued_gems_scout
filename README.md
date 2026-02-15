@@ -13,7 +13,7 @@
 
 ---
 
-## 📑 Table of Contents
+##  Table of Contents
 - [Project Objective](#-project-objective)
 - [Key Features](#-key-features)
 - [Key Findings (2025 Season)](#-key-findings-2025-season)
@@ -30,7 +30,7 @@
 
 ---
 
-## 🎯 Project Objective
+##  Project Objective
 
 Identify players with **high performance but low salary** using real baseball data (Lahman Database, FanGraphs). The model applies K-Means clustering to detect undervalued profiles, helping small-budget teams find hidden gems.
 
@@ -41,7 +41,7 @@ Identify players with **high performance but low salary** using real baseball da
 
 ---
 
-## ✨ Key Features
+##  Key Features
 
 | Feature | Description |
 |---------|-------------|
@@ -55,7 +55,7 @@ Identify players with **high performance but low salary** using real baseball da
 
 ---
 
-## 📊 Key Findings (2025 Season)
+##  Key Findings (2025 Season)
 
 | Player | Team | WAR | Salary | Composite Score |
 |--------|------|-----|--------|-----------------|
@@ -69,7 +69,7 @@ Identify players with **high performance but low salary** using real baseball da
 
 ---
 
-## 💻 Installation
+##  Installation
 
 ```bash
 # Clone the repository
@@ -86,7 +86,7 @@ pip install -r requirements.txt
 
 ---
 
-## 📂 Data Setup
+##  Data Setup
 
 ### Option 1: Automated (Recommended)
 The pipeline will attempt to download FanGraphs data automatically (VPN may be required in some regions).
@@ -100,7 +100,7 @@ The pipeline will attempt to download FanGraphs data automatically (VPN may be r
 
 ---
 
-## ⚙️ Run the Pipeline
+## ️ Run the Pipeline
 
 ```bash
 # Step 1: Load Lahman data (local files)
@@ -123,7 +123,7 @@ jupyter notebook notebooks/01_eda.ipynb
 
 ---
 
-## 🎛️ Dashboard Features
+##  Dashboard Features
 
 | Tab | Description | Key Functionality |
 |-----|-------------|-------------------|
@@ -145,7 +145,7 @@ jupyter notebook notebooks/01_eda.ipynb
 
 ---
 
-## 🤖 Model Details
+##  Model Details
 
 | Parameter | Value |
 |-----------|-------|
@@ -166,7 +166,7 @@ jupyter notebook notebooks/01_eda.ipynb
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 undervalued_gems_scout/
@@ -197,7 +197,7 @@ undervalued_gems_scout/
 
 ---
 
-## 📄 Generated Datasets
+## Generated Datasets
 
 After running the full pipeline, you'll get:
 
@@ -213,7 +213,7 @@ After running the full pipeline, you'll get:
 
 ---
 
-## ☁️ Deploy on Streamlit Cloud
+##  Deploy on Streamlit Cloud
 
 1. **Push code to GitHub**
    ```bash
@@ -235,7 +235,7 @@ After running the full pipeline, you'll get:
 
 ---
 
-## 📬 Contact
+##  Contact
 
 **Ali Suárez** - [@dkysuarez](https://github.com/dkysuarez)
 
@@ -243,7 +243,7 @@ Project Link: [https://github.com/dkysuarez/undervalued_gems_scout](https://gith
 
 ---
 
-## ⭐ Support the Project
+##  Support the Project
 
 If you find this useful, please consider giving it a star on GitHub!
 
