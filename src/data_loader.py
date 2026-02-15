@@ -77,17 +77,49 @@ def load_statcast_data(start_date='2025-03-01', end_date='2025-11-01'):
     return statcast_df
 
 
-def load_fangraphs_stats(year=2025):
-    """Load FanGraphs batting and pitching stats (includes WAR, wOBA, OPS+, etc.) for the given year."""
-    logger.info(f"Loading FanGraphs stats for batting and pitching ({year})...")
-    batting_fg = retry_func(pyb.batting_stats, year, year)
-    pitching_fg = retry_func(pyb.pitching_stats, year, year)
+def load_fangraphs_stats(start_year=2025, end_year=2025):
+    """
+    Load FanGraphs batting and pitching stats (includes WAR, wOBA, OPS+, etc.)
 
-    batting_fg.to_csv(os.path.join(DATA_DIR, f'fangraphs_batting_{year}.csv'), index=False)
-    pitching_fg.to_csv(os.path.join(DATA_DIR, f'fangraphs_pitching_{year}.csv'), index=False)
+    Args:
+        start_year (int): Starting year
+        end_year (int): Ending year
+    """
+    logger.info(f"Loading FanGraphs stats for batting and pitching ({start_year}-{end_year})...")
 
-    logger.info(f"FanGraphs loaded: Batting {len(batting_fg):,} rows.")
-    return batting_fg, pitching_fg
+    try:
+        # CORRECCIÓN: Usar parámetros con nombre
+        batting_fg = pyb.batting_stats(start_season=start_year, end_season=end_year)
+        logger.info(f"Batting stats loaded: {len(batting_fg):,} rows")
+
+        pitching_fg = pyb.pitching_stats(start_season=start_year, end_season=end_year)
+        logger.info(f"Pitching stats loaded: {len(pitching_fg):,} rows")
+
+        # Guardar a CSV
+        batting_fg.to_csv(os.path.join(DATA_DIR, f'fangraphs_batting_{start_year}_{end_year}.csv'), index=False)
+        pitching_fg.to_csv(os.path.join(DATA_DIR, f'fangraphs_pitching_{start_year}_{end_year}.csv'), index=False)
+
+        logger.info(f"FanGraphs loaded successfully!")
+        return batting_fg, pitching_fg
+
+    except Exception as e:
+        logger.error(f"Error loading FanGraphs: {e}")
+        logger.info("Trying alternative method...")
+
+        try:
+            # Método alternativo: usar solo un año
+            batting_fg = pyb.batting_stats(start_year)
+            pitching_fg = pyb.pitching_stats(start_year)
+
+            batting_fg.to_csv(os.path.join(DATA_DIR, f'fangraphs_batting_{start_year}.csv'), index=False)
+            pitching_fg.to_csv(os.path.join(DATA_DIR, f'fangraphs_pitching_{start_year}.csv'), index=False)
+
+            logger.info(f"FanGraphs loaded with alternative method!")
+            return batting_fg, pitching_fg
+
+        except Exception as e2:
+            logger.error(f"Alternative method also failed: {e2}")
+            return pd.DataFrame(), pd.DataFrame()
 
 
 def merge_core_datasets(batting, salaries):
@@ -108,7 +140,7 @@ if __name__ == "__main__":
         # statcast_df = load_statcast_data()
 
         # Optional: Load FanGraphs for WAR/advanced metrics (highly recommended)
-        # fang_bat, fang_pit = load_fangraphs_stats(2025)
+        fang_bat, fang_pit = load_fangraphs_stats(2025, 2025)
 
         # Initial merge
         merge_core_datasets(batting, salaries)
