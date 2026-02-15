@@ -1,6 +1,21 @@
+"""
+data_cleaner_complete.py - Data cleaning with FULL metrics and team information
+FOCUSED VERSION: Hitters only (no pitchers)
+
+This enhanced version:
+1. Loads Lahman data (batting + salaries) for years ≤2016
+2. Loads FanGraphs BATTING data for years ≥2017
+3. Preserves team information from both sources
+4. Includes ALL available batting metrics
+
+Author: Moneyball Analytics
+Date: 2026
+"""
+
 import logging
 import os
 import pandas as pd
+import numpy as np
 import pybaseball as pyb
 
 # Logging setup
@@ -11,216 +26,251 @@ logger = logging.getLogger(__name__)
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data')
 os.makedirs(DATA_DIR, exist_ok=True)
 
-# People CSV path (from Lahman)
-PEOPLE_PATH = os.path.join(DATA_DIR, 'lahman', 'People.csv')  # Adjust if not in subfolder
+# People CSV path
+PEOPLE_PATH = os.path.join(DATA_DIR, 'lahman', 'People.csv')
 
 
 def load_people():
-    """
-    Load People.csv for player names (playerID to Name).
-
-    Returns:
-        DataFrame with playerID and Name columns, or None if file not found
-    """
+    """Load People.csv for player names"""
     if not os.path.exists(PEOPLE_PATH):
-        logger.warning(f"People.csv not found at {PEOPLE_PATH}. Names won't be added.")
+        logger.warning(f"People.csv not found at {PEOPLE_PATH}")
         return None
 
     people = pd.read_csv(PEOPLE_PATH)
-    # Create full name column by combining first and last name
     people['Name'] = people['nameFirst'].fillna('') + ' ' + people['nameLast'].fillna('')
     people = people[['playerID', 'Name']].dropna(subset=['playerID'])
     logger.info(f"Loaded {len(people):,} player names.")
     return people
 
 
-def load_fangraphs_advanced(year_start=2015, year_end=2025):
+def load_fangraphs_batting_complete(year_start=2015, year_end=2025):
     """
-    Load advanced batting stats from FanGraphs.
-
-    Includes key metrics: WAR, wOBA, wRC+, BABIP, ISO, K%, etc.
-
-    Args:
-        year_start (int): Starting year for data
-        year_end (int): Ending year for data
-
-    Returns:
-        DataFrame with FanGraphs advanced stats, or empty DataFrame if error
+    Load COMPLETE FanGraphs batting stats with ALL metrics
     """
-    logger.info(f"Loading FanGraphs batting stats from {year_start} to {year_end}...")
+    logger.info(f"Loading COMPLETE FanGraphs batting stats from {year_start} to {year_end}...")
 
     try:
+        # Load all batting data
         fg_batting = pyb.batting_stats(year_start, year_end)
 
-        # Rename columns for consistency and to avoid special characters
+        # Rename columns for consistency
         fg_batting = fg_batting.rename(columns={
             'Season': 'yearID',
             'IDfg': 'fg_id',
-            'Name': 'Name',  # Keep as is
-            'wRC+': 'wRC_plus'  # Rename to avoid + character in column name
+            'Name': 'Name',
+            'Team': 'team_name',  # Keep team info (NYY, LAD, etc.)
+            'wRC+': 'wRC_plus'
         })
 
-        # Define desired columns (these are the key metrics we want)
-        desired_columns = ['yearID', 'Name', 'WAR', 'wOBA', 'wRC_plus', 'BABIP', 'ISO', 'K%']
+        # Convert salary (Dol) to numeric - remove $ sign
+        if 'Dol' in fg_batting.columns:
+            fg_batting['Dol'] = fg_batting['Dol'].astype(str).str.replace('$', '', regex=False)
+            fg_batting['Dol'] = pd.to_numeric(fg_batting['Dol'], errors='coerce')
+            logger.info(f"Salary column 'Dol' found and converted")
+        else:
+            logger.warning("No 'Dol' column found in batting data")
 
-        # Check which columns actually exist in the dataframe
-        existing_columns = [col for col in desired_columns if col in fg_batting.columns]
-
-        logger.info(f"Found columns: {existing_columns}")
-
-        # If wRC_plus doesn't exist, try to use OPS as a fallback
-        if 'wRC_plus' not in existing_columns and 'OPS' in fg_batting.columns:
-            logger.info("wRC+ not found, using OPS as alternative")
-            existing_columns.append('OPS')
-
-        # Select only the columns that exist
-        fg_df = fg_batting[existing_columns].copy()
-
-        logger.info(f"FanGraphs loaded successfully: {len(fg_df):,} rows.")
-        return fg_df
+        logger.info(f"Loaded {len(fg_batting):,} batting rows")
+        logger.info(f"Sample team names: {fg_batting['team_name'].head(5).tolist()}")
+        return fg_batting
 
     except Exception as e:
-        logger.error(f"Error loading FanGraphs: {e}. Skipping advanced stats.")
+        logger.error(f"Error loading FanGraphs batting: {e}")
         return pd.DataFrame()
 
 
-def clean_and_enrich_data():
+def clean_and_enrich_complete():
     """
-    Main function: Clean data, enrich with advanced metrics, and compute patterns.
-
-    This function:
-    1. Loads merged Lahman batting + salary data
-    2. Applies filters (year >= 2015, AB >= 100)
-    3. Loads FanGraphs advanced stats
-    4. Merges datasets
-    5. Computes key metrics and patterns for undervalued player detection
-    6. Saves cleaned data to CSV
-
-    Returns:
-        DataFrame with cleaned and enriched data
+    Main function: Create COMPLETE enriched dataset with all metrics and team info
+    FOCUSED ON HITTERS ONLY
     """
-    logger.info("Starting data cleaning and enrichment...")
+    logger.info("="*80)
+    logger.info("STARTING COMPLETE DATA CLEANING AND ENRICHMENT")
+    logger.info("="*80)
 
-    # Load merged batting + salaries data from data_loader.py output
+    # =========================================================================
+    # 1. LOAD ALL DATA SOURCES
+    # =========================================================================
+
+    # Load Lahman merged data
     merge_path = os.path.join(DATA_DIR, 'merged_batting_salaries.csv')
     if not os.path.exists(merge_path):
-        raise FileNotFoundError(f"Merged file not found: {merge_path}. Run data_loader.py first.")
+        raise FileNotFoundError(f"Run data_loader.py first. Missing: {merge_path}")
 
-    df = pd.read_csv(merge_path)
-    logger.info(f"Loaded merged data: {len(df):,} rows")
+    df_lahman = pd.read_csv(merge_path)
+    logger.info(f"Loaded Lahman data: {len(df_lahman):,} rows")
 
-    # Load people data for player names
+    # Load people for names
     people = load_people()
 
-    # Load FanGraphs advanced stats
-    fg_df = load_fangraphs_advanced(2015, 2025)
+    # Load COMPLETE FanGraphs BATTING data (NO pitching)
+    fg_batting = load_fangraphs_batting_complete(2015, 2025)
 
-    # Basic cleaning on Lahman merge
-    # Filter for recent years only
-    df = df[df['yearID'] >= 2015]
-    logger.info(f"After year filter (>=2015): {len(df):,} rows")
+    # =========================================================================
+    # 2. PROCESS LAHMAN DATA (YEARS ≤2016)
+    # =========================================================================
 
-    # Minimum at-bats to avoid small sample sizes
-    df = df[df['AB'] >= 100]
-    logger.info(f"After AB filter (>=100): {len(df):,} rows")
+    # Filter Lahman for recent years and minimum AB
+    df_lahman = df_lahman[df_lahman['yearID'] >= 2015]
+    df_lahman = df_lahman[df_lahman['AB'] >= 100]
 
-    # Convert salary to millions USD and fill NaN values with 0
-    df['salary'] = df['salary'].fillna(0) / 1_000_000
+    # Convert salary to millions
+    df_lahman['salary'] = df_lahman['salary'].fillna(0) / 1_000_000
 
-    # Compute basic patterns from Lahman data
-    df['hits_per_ab'] = df['H'] / df['AB']
-    df['iso_lahman'] = (df['2B'] + 2 * df['3B'] + 3 * df['HR']) / df['AB']  # Isolated Power approximation
-    df['k_rate_lahman'] = df['SO'] / df['AB'] if 'SO' in df.columns else 0
+    # Add names
+    if people is not None:
+        df_lahman['Name'] = df_lahman['playerID'].map(people.set_index('playerID')['Name'])
+    else:
+        df_lahman['Name'] = df_lahman['playerID']
 
-    # If FanGraphs data is available, merge it with Lahman data
-    if not fg_df.empty:
-        # Add Name column to Lahman data using people lookup
-        if people is not None:
-            df['Name'] = df['playerID'].map(people.set_index('playerID')['Name'])
+    # ===== Find team column in Lahman =====
+    team_col_candidates = ['teamID', 'team', 'Team', 'team_id']
+    team_col_found = None
+
+    for col in team_col_candidates:
+        if col in df_lahman.columns:
+            team_col_found = col
+            break
+
+    if team_col_found:
+        logger.info(f"Found team column in Lahman: '{team_col_found}'")
+        df_lahman['team_name'] = df_lahman[team_col_found]
+    else:
+        logger.warning("No team column found in Lahman data")
+        df_lahman['team_name'] = 'UNK'
+
+    df_lahman['data_source'] = 'Lahman'
+    df_lahman['position_type'] = 'batter'  # All Lahman data here is batters
+
+    # Split by year - keep only ≤2016 (complete salaries)
+    lahman_old = df_lahman[df_lahman['yearID'] <= 2016].copy()
+    logger.info(f"Lahman ≤2016: {len(lahman_old):,} rows")
+    if not lahman_old.empty:
+        logger.info(f"Sample Lahman teams: {lahman_old['team_name'].head(5).tolist()}")
+
+    # =========================================================================
+    # 3. PROCESS FANGRAPHS BATTING DATA (YEARS ≥2017)
+    # =========================================================================
+
+    if not fg_batting.empty:
+        logger.info("="*80)
+        logger.info("PROCESSING FANGRAPHS BATTING DATA")
+        logger.info("="*80)
+
+        fg_bat = fg_batting.copy()
+
+        # Rename salary column (Dol -> salary)
+        if 'Dol' in fg_bat.columns:
+            fg_bat['salary'] = fg_bat['Dol']  # Already in millions
         else:
-            df['Name'] = df['playerID']  # Fallback to playerID if no names available
+            logger.warning("No salary data in FanGraphs batting")
+            fg_bat['salary'] = 0
 
-        # Merge on yearID and Name (approximate matching - may miss some players)
-        logger.info("Merging Lahman data with FanGraphs advanced stats...")
-        merged = pd.merge(df, fg_df, on=['yearID', 'Name'], how='left', suffixes=('_lahman', '_fg'))
-        logger.info(f"After merge: {len(merged):,} rows")
+        # Add source and type
+        fg_bat['data_source'] = 'FanGraphs'
+        fg_bat['position_type'] = 'batter'
 
-        # Fill missing FanGraphs values with 0 or mean as appropriate
-        for col in ['WAR', 'wOBA', 'BABIP', 'ISO', 'K%']:
-            if col in merged.columns:
-                merged[col] = merged[col].fillna(0)
-
-        # Handle wRC_plus or OPS based on what's available
-        if 'wRC_plus' in merged.columns:
-            merged['wRC_plus'] = merged['wRC_plus'].fillna(100)  # 100 is league average
-        elif 'OPS' in merged.columns:
-            merged['OPS'] = merged['OPS'].fillna(merged['OPS'].mean())
+        # Filter for recent years (≥2017)
+        fg_bat_recent = fg_bat[fg_bat['yearID'] >= 2017].copy()
+        logger.info(f"FanGraphs batting ≥2017: {len(fg_bat_recent):,} rows")
+        logger.info(f"Sample teams: {fg_bat_recent['team_name'].head(10).tolist()}")
     else:
-        # If no FanGraphs data, use Lahman data with placeholder values
-        merged = df.copy()
-        merged['WAR'] = 0  # Placeholder
-        merged['wOBA'] = 0
-        merged['BABIP'] = 0
-        merged['ISO'] = 0
-        merged['K%'] = 0
-        logger.warning("Using placeholder values for advanced stats (FanGraphs data not available)")
+        fg_bat_recent = pd.DataFrame()
+        logger.warning("No FanGraphs batting data available")
 
-    # KEY PATTERNS FOR UNDERVALUED PLAYER DETECTION
+    # =========================================================================
+    # 4. COMBINE DATASETS
+    # =========================================================================
 
-    # 1. Value ratio: WAR per million dollars of salary
-    # Higher ratio means more value for less money
-    merged['value_ratio'] = merged['WAR'] / (merged['salary'] + 0.1)  # Add 0.1 to avoid division by zero
+    logger.info("="*80)
+    logger.info("COMBINING DATASETS")
+    logger.info("="*80)
 
-    # 2. "Bad luck, good talent" pattern: Low BABIP but good wOBA
-    # Indicates player is hitting well but balls aren't falling for hits
-    if 'BABIP' in merged.columns and 'wOBA' in merged.columns:
-        merged['babip_low_high_woba'] = (merged['BABIP'] < 0.280) & (merged['wOBA'] > 0.320)
-    else:
-        merged['babip_low_high_woba'] = False
+    # Start with Lahman old data
+    combined_list = [lahman_old]
 
-    # 3. "Power with contact" pattern: High ISO, low strikeout rate
-    # Indicates player makes contact and hits for power
-    if 'ISO' in merged.columns and 'K%' in merged.columns:
-        merged['power_contact'] = (merged['ISO'] > 0.160) & (merged['K%'] < 0.22)
-    else:
-        merged['power_contact'] = False
+    # Add FanGraphs batting
+    if not fg_bat_recent.empty:
+        combined_list.append(fg_bat_recent)
 
-    # 4. "xStats outperforming" would go here if we had expected stats
-    # (Would need Statcast data for exit velocity, xBA, xSLG, etc.)
+    # Combine all
+    combined = pd.concat(combined_list, ignore_index=True, sort=False)
+    logger.info(f"TOTAL COMBINED DATA: {len(combined):,} rows")
+    logger.info(f"Years: {sorted(combined['yearID'].unique())}")
 
-    # 5. Combined score: Weighted combination of multiple factors
-    # Normalize components to 0-1 scale where possible
-    merged['undervalued_score'] = 0
+    # Show team distribution
+    logger.info("\nTeam distribution (top 10):")
+    team_counts = combined['team_name'].value_counts().head(10)
+    for team, count in team_counts.items():
+        logger.info(f"  {team}: {count} players")
 
-    # Add value ratio component (normalized)
-    if merged['value_ratio'].max() > merged['value_ratio'].min():
-        merged['undervalued_score'] += (merged['value_ratio'] - merged['value_ratio'].min()) / \
-                                       (merged['value_ratio'].max() - merged['value_ratio'].min()) * 0.4
+    # =========================================================================
+    # 5. SAVE DATASETS
+    # =========================================================================
 
-    # Add pattern indicators
-    merged['undervalued_score'] += merged['babip_low_high_woba'].astype(int) * 0.3
-    merged['undervalued_score'] += merged['power_contact'].astype(int) * 0.3
+    # Save complete dataset
+    complete_path = os.path.join(DATA_DIR, 'complete_baseball_data.csv')
+    combined.to_csv(complete_path, index=False)
+    logger.info(f"\nSaved COMPLETE dataset to: {complete_path}")
+    logger.info(f"Total columns: {len(combined.columns)}")
 
-    # Sort by value_ratio descending to find most undervalued players
-    undervalued = merged.sort_values('value_ratio', ascending=False)
+    # Create 2025 subset
+    data_2025 = combined[combined['yearID'] == 2025].copy()
+    data_2025_path = os.path.join(DATA_DIR, 'complete_data_2025.csv')
+    data_2025.to_csv(data_2025_path, index=False)
+    logger.info(f"Saved 2025 data ({len(data_2025)} rows) to: {data_2025_path}")
 
-    # Save cleaned data to CSV
-    output_path = os.path.join(DATA_DIR, 'cleaned_undervalued_data.csv')
-    undervalued.to_csv(output_path, index=False)
-    logger.info(f"Cleaned data saved to: {output_path}")
+    # Create model-ready dataset (for clustering)
+    model_cols = ['Name', 'team_name', 'yearID', 'WAR', 'salary', 'wOBA', 'BABIP', 'ISO', 'K%']
+    available_cols = [col for col in model_cols if col in combined.columns]
+    model_df = combined[available_cols].copy()
+    model_df = model_df.dropna(subset=['WAR', 'salary', 'wOBA'])
 
-    # Display top 10 undervalued players
-    logger.info("=" * 60)
-    logger.info("TOP 10 UNDERVALUED PLAYERS (by value_ratio):")
-    logger.info("=" * 60)
+    model_path = os.path.join(DATA_DIR, 'model_ready_data.csv')
+    model_df.to_csv(model_path, index=False)
+    logger.info(f"Saved model-ready data ({len(model_df)} rows) to: {model_path}")
 
-    # Select columns to display (only those that exist)
-    display_cols = []
-    for col in ['Name', 'yearID', 'teamID', 'WAR', 'salary', 'value_ratio', 'BABIP', 'wOBA', 'undervalued_score']:
-        if col in undervalued.columns:
-            display_cols.append(col)
+    # =========================================================================
+    # 6. DISPLAY SAMPLE
+    # =========================================================================
 
-    logger.info(f"\n{undervalued.head(10)[display_cols].to_string()}")
+    logger.info("\n" + "="*80)
+    logger.info("SAMPLE 2025 DATA WITH TEAM NAMES")
+    logger.info("="*80)
 
-    return undervalued
+    if not data_2025.empty:
+        # Select key columns to display
+        display_cols = ['Name', 'team_name', 'yearID', 'WAR', 'salary']
+        display_cols = [c for c in display_cols if c in data_2025.columns]
 
+        logger.info(f"\n{data_2025[display_cols].head(15).to_string()}")
+
+    # Check specific players
+    stars = ['Aaron Judge', 'Shohei Ohtani', 'Wyatt Langford', 'Andy Pages']
+    for star in stars:
+        star_data = combined[combined['Name'].str.contains(star, na=False)]
+        if not star_data.empty:
+            logger.info(f"\n{star}:")
+            for _, row in star_data.iterrows():
+                team = row.get('team_name', 'N/A')
+                year = int(row['yearID'])
+                war = row.get('WAR', 0)
+                salary = row.get('salary', 0)
+                logger.info(f"  {year}: {team} - WAR={war:.2f}, Salary=${salary:.2f}M")
+
+    logger.info("\n" + "="*80)
+    logger.info("✅ COMPLETE DATA CLEANING FINISHED SUCCESSFULLY")
+    logger.info("="*80)
+
+    return combined
+
+
+if __name__ == "__main__":
+    try:
+        # Create complete enriched dataset
+        complete_df = clean_and_enrich_complete()
+
+
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        logger.exception("Full traceback:")
