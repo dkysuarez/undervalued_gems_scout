@@ -9,7 +9,6 @@
 
 **Moneyball-style analytics to discover undervalued baseball players using clustering and performance metrics.**
 
-![Dashboard Preview](https://via.placeholder.com/1200x600.png?text=Undervalued+Gems+Scout+Dashboard+-+2025+Season)
 
 ---
 
