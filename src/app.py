@@ -1,6 +1,7 @@
 """
 app.py - Undervalued Gems Scout Interactive Dashboard
 WITH DYNAMIC COLUMN DETECTION - PROFESSIONAL LOADING SCREEN
+UPDATED: Uses 'team_name' for team filtering
 """
 
 import streamlit as st
@@ -228,10 +229,10 @@ def show_professional_loading_screen():
                 <div class='progress-bar'></div>
             </div>
             <div class='steps-container'>
-                <div class='step' id="step1">📊 Loading Data</div>
-                <div class='step' id="step2">⚙️ Processing</div>
-                <div class='step' id="step3">📈 Preparing Visualizations</div>
-                <div class='step' id="step4">🚀 Ready</div>
+                <div class='step' id="step1">Loading Data</div>
+                <div class='step' id="step2">Processing</div>
+                <div class='step' id="step3">Preparing Visualizations</div>
+                <div class='step' id="step4">Ready</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -419,7 +420,7 @@ st.markdown("""
         to { opacity: 1; transform: translateY(0); }
     }
     
-    /* Estilo para la pelota - mantiene su color original */
+    /* Style for the ball - maintains its original color */
     .baseball-icon {
         display: inline-block;
         background: none !important;
@@ -429,7 +430,7 @@ st.markdown("""
         margin-right: 5px;
     }
     
-    /* Títulos de gráficos en blanco con glow */
+    /* Chart titles in white with glow */
     .chart-title {
         color: white !important;
         font-size: 1.4rem;
@@ -457,22 +458,26 @@ def load_all_data():
 
     data = {}
 
-    # 1. Top undervalued 2025
-    top_path = os.path.join(data_dir, 'top_undervalued_2025.csv')
-    if os.path.exists(top_path):
-        data['top_2025'] = pd.read_csv(top_path)
-        st.sidebar.success(f"✅ Loaded top_2025: {len(data['top_2025'])} players")
+    # 1. Try to load complete_data_2025.csv first (has team_name)
+    complete_2025_path = os.path.join(data_dir, 'complete_data_2025.csv')
+    if os.path.exists(complete_2025_path):
+        data['full_2025'] = pd.read_csv(complete_2025_path)
+        st.sidebar.success(f"✅ Loaded complete 2025 data: {len(data['full_2025'])} players")
     else:
-        data['top_2025'] = pd.DataFrame()
-        st.sidebar.warning("⚠️ top_undervalued_2025.csv not found")
+        # Fallback to old files
+        top_path = os.path.join(data_dir, 'top_undervalued_2025.csv')
+        if os.path.exists(top_path):
+            data['top_2025'] = pd.read_csv(top_path)
+            st.sidebar.success(f"✅ Loaded top_2025: {len(data['top_2025'])} players")
+        else:
+            data['top_2025'] = pd.DataFrame()
+            st.sidebar.warning("⚠️ No 2025 data found")
 
-    # 2. Full 2025 analysis
-    full_path = os.path.join(analysis_dir, 'players_2025_analysis.csv')
-    if os.path.exists(full_path):
-        data['full_2025'] = pd.read_csv(full_path)
-        st.sidebar.success(f"✅ Loaded full_2025: {len(data['full_2025'])} players")
-    else:
-        data['full_2025'] = pd.DataFrame()
+        full_path = os.path.join(analysis_dir, 'players_2025_analysis.csv')
+        if os.path.exists(full_path):
+            data['full_2025'] = pd.read_csv(full_path)
+        else:
+            data['full_2025'] = pd.DataFrame()
 
     # 3. All historical players
     all_path = os.path.join(analysis_dir, 'all_players_with_clusters.csv')
@@ -510,17 +515,17 @@ def get_available_columns(df, column_list):
 # =============================================================================
 def render_sidebar(data):
     with st.sidebar:
-        st.markdown("## ⚾ Filters")
+        st.markdown("## Filters")
         st.markdown("---")
 
         # Dataset selector
-        st.markdown('<div class="sidebar-header">📋 DATASET</div>', unsafe_allow_html=True)
+        st.markdown('<div class="sidebar-header">DATASET</div>', unsafe_allow_html=True)
         dataset_options = []
-        if not data['top_2025'].empty:
+        if 'top_2025' in data and not data['top_2025'].empty:
             dataset_options.append("Top 50 - 2025")
-        if not data['full_2025'].empty:
+        if 'full_2025' in data and not data['full_2025'].empty:
             dataset_options.append("All 2025 Players")
-        if not data['all_players'].empty:
+        if 'all_players' in data and not data['all_players'].empty:
             dataset_options.append("Historical (All Years)")
 
         if not dataset_options:
@@ -541,19 +546,23 @@ def render_sidebar(data):
         if 'WAR' in df.columns and 'salary' in df.columns:
             df['WAR_per_M'] = df['WAR'] / (df['salary'] + 0.1)
 
-        # Team filter
-        st.markdown('<div class="sidebar-header">🏟️ TEAM</div>', unsafe_allow_html=True)
-        team_cols = get_available_columns(df, ['teamID', 'team', 'Team', 'teamId'])
+        # ===== TEAM FILTER - UPDATED to prioritize team_name =====
+        st.markdown('<div class="sidebar-header">TEAM</div>', unsafe_allow_html=True)
+        # Look for team_name first, then fallback to other variants
+        team_cols = get_available_columns(df, ['team_name', 'teamID', 'team', 'Team'])
         if team_cols:
             team_col = team_cols[0]
             teams = ['All Teams'] + sorted(df[team_col].dropna().unique().tolist())
             selected_team = st.selectbox("Team", teams, key="team_select")
+            # Show which column is being used (for debugging)
+            if team_col != 'team_name':
+                st.caption(f"Using column: {team_col}")
         else:
             selected_team = 'All Teams'
             st.info("No team data available")
 
         # Year filter
-        st.markdown('<div class="sidebar-header">📅 YEAR</div>', unsafe_allow_html=True)
+        st.markdown('<div class="sidebar-header">YEAR</div>', unsafe_allow_html=True)
         year_cols = get_available_columns(df, ['yearID', 'Year', 'year'])
         if year_cols:
             year_col = year_cols[0]
@@ -563,7 +572,7 @@ def render_sidebar(data):
             selected_year = 'All Years'
 
         # Metric filters
-        st.markdown('<div class="sidebar-header">📊 METRICS</div>', unsafe_allow_html=True)
+        st.markdown('<div class="sidebar-header">METRICS</div>', unsafe_allow_html=True)
 
         if 'WAR' in df.columns:
             min_war = st.slider("Min WAR", 0.0, float(df['WAR'].max()), 1.0, 0.5, key="war_slider")
@@ -581,12 +590,12 @@ def render_sidebar(data):
             babip_min = 0
 
         # Price filters
-        st.markdown('<div class="sidebar-header">💰 PRICE</div>', unsafe_allow_html=True)
+        st.markdown('<div class="sidebar-header">PRICE</div>', unsafe_allow_html=True)
 
         if 'salary' in df.columns:
-            max_salary = st.slider("Max Salary ($M)", 0.0, float(df['salary'].max()), 2.0, 0.1, key="salary_slider")
+            max_salary = st.slider("Max Salary ($M)", 0.0, float(df['salary'].max()), 20.0, 1.0, key="salary_slider")
         else:
-            max_salary = 10
+            max_salary = 50
 
         if 'WAR_per_M' in df.columns:
             min_war_per_m = st.slider("Min WAR per $1M", 0.0, 20.0, 2.0, 0.5, key="war_per_m_slider")
@@ -594,7 +603,7 @@ def render_sidebar(data):
             min_war_per_m = 0
 
         # Sort by
-        st.markdown('<div class="sidebar-header">📈 SORT BY</div>', unsafe_allow_html=True)
+        st.markdown('<div class="sidebar-header">SORT BY</div>', unsafe_allow_html=True)
         sort_options = []
         if 'composite_score' in df.columns:
             sort_options.append('composite_score')
@@ -644,7 +653,7 @@ def apply_filters(filters):
 
     df = filters['df'].copy()
 
-    # Team filter
+    # Team filter - uses team_col which now prioritizes 'team_name'
     if filters['team'] != 'All Teams' and filters['team_col'] and filters['team_col'] in df.columns:
         df = df[df[filters['team_col']] == filters['team']]
 
@@ -679,14 +688,15 @@ def apply_filters(filters):
 # VISUALIZATIONS - WITH DYNAMIC COLUMN DETECTION
 # =============================================================================
 def create_scatter_plot(df, centroid):
-    """WAR vs Salary scatter plot - SIN TÍTULO INTERNO"""
+    """WAR vs Salary scatter plot - WITHOUT INTERNAL TITLE"""
     if 'WAR' not in df.columns or 'salary' not in df.columns:
         return go.Figure()
 
-    # Build hover data dynamically
+    # Build hover data dynamically - look for team_name first
     hover_data = {}
-    if 'teamID' in df.columns:
-        hover_data['teamID'] = True
+    team_col = get_available_columns(df, ['team_name', 'teamID', 'team', 'Team'])
+    if team_col:
+        hover_data[team_col[0]] = True
     if 'yearID' in df.columns:
         hover_data['yearID'] = True
     if 'wOBA' in df.columns:
@@ -734,7 +744,7 @@ def create_scatter_plot(df, centroid):
 
 
 def create_radar_chart(player, centroid):
-    """Radar chart comparing player to centroid - CON TEXTO BLANCO"""
+    """Radar chart comparing player to centroid - WITH WHITE TEXT"""
     categories = ['WAR', 'BABIP', 'wOBA', 'ISO']
 
     player_values = []
@@ -755,7 +765,7 @@ def create_radar_chart(player, centroid):
 
     fig = go.Figure()
 
-    # Traza del jugador
+    # Player trace
     fig.add_trace(go.Scatterpolar(
         r=player_values,
         theta=categories,
@@ -765,7 +775,7 @@ def create_radar_chart(player, centroid):
         fillcolor='rgba(78,205,196,0.3)'
     ))
 
-    # Traza del perfil undervalued
+    # Undervalued profile trace
     fig.add_trace(go.Scatterpolar(
         r=centroid_values,
         theta=categories,
@@ -775,27 +785,27 @@ def create_radar_chart(player, centroid):
         fillcolor='rgba(255,107,107,0.3)'
     ))
 
-    # Configuración del layout con TODO en blanco
+    # Layout configuration with ALL text in white
     fig.update_layout(
         polar=dict(
             radialaxis=dict(
                 visible=True,
                 range=[0, 100],
-                tickfont=dict(color='white', size=10),  # Números del eje en blanco
-                gridcolor='rgba(255,255,255,0.2)',  # Grid más suave
-                linecolor='rgba(255,255,255,0.3)'  # Línea del eje
-            ),
-            angularaxis=dict(
-                tickfont=dict(color='white', size=11, weight='bold'),  # Categorías en blanco
+                tickfont=dict(color='white', size=10),
                 gridcolor='rgba(255,255,255,0.2)',
                 linecolor='rgba(255,255,255,0.3)'
             ),
-            bgcolor='rgba(0,0,0,0)'  # Fondo transparente
+            angularaxis=dict(
+                tickfont=dict(color='white', size=11, weight='bold'),
+                gridcolor='rgba(255,255,255,0.2)',
+                linecolor='rgba(255,255,255,0.3)'
+            ),
+            bgcolor='rgba(0,0,0,0)'
         ),
         showlegend=True,
         legend=dict(
-            font=dict(color='white', size=11),  # Leyenda en blanco
-            bgcolor='rgba(0,0,0,0.5)',  # Fondo semi-transparente para la leyenda
+            font=dict(color='white', size=11),
+            bgcolor='rgba(0,0,0,0.5)',
             bordercolor='rgba(255,255,255,0.2)',
             borderwidth=1,
             x=0.8,
@@ -803,12 +813,12 @@ def create_radar_chart(player, centroid):
         ),
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
-        font=dict(color='white'),  # Texto general en blanco
+        font=dict(color='white'),
         height=450,
-        margin=dict(l=80, r=80, t=40, b=40)  # Márgenes para mejor visualización
+        margin=dict(l=80, r=80, t=40, b=40)
     )
 
-    # Actualizar colores de las líneas de la cuadrícula y ejes
+    # Update grid line colors and axes
     fig.update_polars(
         radialaxis_gridcolor='rgba(255,255,255,0.15)',
         angularaxis_gridcolor='rgba(255,255,255,0.15)'
@@ -818,7 +828,7 @@ def create_radar_chart(player, centroid):
 
 
 def create_trend_chart(df, top_n=10):
-    """Bar chart of top players - SIN TÍTULO INTERNO Y CON TEXTO BLANCO"""
+    """Bar chart of top players - WITHOUT INTERNAL TITLE AND WITH WHITE TEXT"""
     if 'Name' not in df.columns:
         return go.Figure()
 
@@ -830,49 +840,49 @@ def create_trend_chart(df, top_n=10):
         x='Name',
         y=y_col,
         color=y_col,
-        title=None,  # QUITAMOS EL TÍTULO INTERNO
+        title=None,
         labels={y_col: 'Score', 'Name': 'Player'},
         color_continuous_scale='Tealgrn',
-        text=y_col  # Mostrar el valor encima de cada barra
+        text=y_col
     )
 
     fig.update_traces(
-        texttemplate='%{text:.2f}',  # Formato del texto en las barras
-        textposition='outside',       # Posición del texto
-        textfont=dict(color='white', size=10),  # Texto de las barras en blanco
-        marker_line_color='rgba(255,255,255,0.2)',  # Borde de las barras
+        texttemplate='%{text:.2f}',
+        textposition='outside',
+        textfont=dict(color='white', size=10),
+        marker_line_color='rgba(255,255,255,0.2)',
         marker_line_width=1,
-        hovertemplate='<b>%{x}</b><br>Score: %{y:.2f}<extra></extra>'  # Tooltip personalizado
+        hovertemplate='<b>%{x}</b><br>Score: %{y:.2f}<extra></extra>'
     )
 
     fig.update_layout(
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
-        font=dict(color='white'),  # TODO el texto en blanco
+        font=dict(color='white'),
         height=450,
-        margin=dict(l=50, r=50, t=30, b=100),  # Márgenes ajustados
+        margin=dict(l=50, r=50, t=30, b=100),
         xaxis=dict(
-            title=dict(text='Player', font=dict(color='white')),  # Título del eje X en blanco
-            tickfont=dict(color='white', size=10),  # Nombres de jugadores en blanco
-            tickangle=-45,  # Rotación para que se lean mejor
+            title=dict(text='Player', font=dict(color='white')),
+            tickfont=dict(color='white', size=10),
+            tickangle=-45,
             gridcolor='rgba(255,255,255,0.1)',
             linecolor='rgba(255,255,255,0.3)'
         ),
         yaxis=dict(
-            title=dict(text='Score', font=dict(color='white')),  # Título del eje Y en blanco
-            tickfont=dict(color='white'),  # Números del eje Y en blanco
+            title=dict(text='Score', font=dict(color='white')),
+            tickfont=dict(color='white'),
             gridcolor='rgba(255,255,255,0.1)',
             linecolor='rgba(255,255,255,0.3)'
         ),
         coloraxis_colorbar=dict(
-            title=dict(text='Score', font=dict(color='white')),  # Barra de color
+            title=dict(text='Score', font=dict(color='white')),
             tickfont=dict(color='white'),
             bgcolor='rgba(0,0,0,0.5)',
             bordercolor='rgba(255,255,255,0.2)'
         ),
         hoverlabel=dict(
-            bgcolor='#1a3a4a',  # Fondo del tooltip
-            font=dict(color='white', size=12),  # Texto del tooltip en blanco
+            bgcolor='#1a3a4a',
+            font=dict(color='white', size=12),
             bordercolor='#4ecdc4'
         )
     )
@@ -881,8 +891,8 @@ def create_trend_chart(df, top_n=10):
 
 
 def create_team_distribution(df):
-    """Pie chart of team distribution - SIN TÍTULO INTERNO"""
-    team_cols = [col for col in ['teamID', 'team', 'Team'] if col in df.columns]
+    """Pie chart of team distribution - WITHOUT INTERNAL TITLE - UPDATED for team_name"""
+    team_cols = get_available_columns(df, ['team_name', 'teamID', 'team', 'Team'])
     if not team_cols:
         return go.Figure()
 
@@ -911,7 +921,7 @@ def create_team_distribution(df):
 
 
 def create_year_distribution(df):
-    """Bar chart of year distribution - SIN TÍTULO INTERNO"""
+    """Bar chart of year distribution - WITHOUT INTERNAL TITLE"""
     year_cols = [col for col in ['yearID', 'Year', 'year'] if col in df.columns]
     if not year_cols:
         return go.Figure()
@@ -942,7 +952,7 @@ def create_year_distribution(df):
 
 
 def create_correlation_heatmap(df):
-    """Correlation heatmap of metrics - CON TEXTO BLANCO"""
+    """Correlation heatmap of metrics - WITH WHITE TEXT"""
     corr_cols = ['WAR', 'salary', 'BABIP', 'wOBA', 'ISO', 'K%',
                  'similarity_score', 'composite_score', 'WAR_per_M']
     corr_cols = [col for col in corr_cols if col in df.columns]
@@ -957,35 +967,34 @@ def create_correlation_heatmap(df):
         text_auto='.2f',
         aspect="auto",
         color_continuous_scale='Tealgrn',
-        title=None  # Sin título interno
+        title=None
     )
 
     fig.update_layout(
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
-        font=dict(color='white'),  # Texto general en blanco
+        font=dict(color='white'),
         height=500,
         xaxis=dict(
-            tickfont=dict(color='white'),  # Etiquetas del eje X en blanco
+            tickfont=dict(color='white'),
             title_font=dict(color='white'),
             gridcolor='rgba(255,255,255,0.1)'
         ),
         yaxis=dict(
-            tickfont=dict(color='white'),  # Etiquetas del eje Y en blanco
+            tickfont=dict(color='white'),
             title_font=dict(color='white'),
             gridcolor='rgba(255,255,255,0.1)'
         ),
         coloraxis_colorbar=dict(
-            title_font=dict(color='white'),  # Título de la barra de color en blanco
-            tickfont=dict(color='white'),  # Números de la barra en blanco
+            title_font=dict(color='white'),
+            tickfont=dict(color='white'),
             bgcolor='rgba(0,0,0,0.5)',
             bordercolor='rgba(255,255,255,0.2)'
         )
     )
 
-    # Actualizar el color de los números dentro de las celdas
     fig.update_traces(
-        textfont=dict(color='white', size=10),  # Números en blanco
+        textfont=dict(color='white', size=10),
         hoverinfo='none'
     )
 
@@ -993,7 +1002,7 @@ def create_correlation_heatmap(df):
 
 
 def create_histogram(df, column, title=None):
-    """Create histogram for any column - SIN TÍTULO INTERNO"""
+    """Create histogram for any column - WITHOUT INTERNAL TITLE"""
     if column not in df.columns:
         return go.Figure()
 
@@ -1105,7 +1114,8 @@ def main():
             """, unsafe_allow_html=True)
 
     with col4:
-        team_cols = [col for col in ['teamID', 'team', 'Team'] if col in filtered_df.columns]
+        # Use get_available_columns to find team column
+        team_cols = get_available_columns(filtered_df, ['team_name', 'teamID', 'team', 'Team'])
         if team_cols:
             team_col = team_cols[0]
             st.markdown(f"""
@@ -1138,13 +1148,22 @@ def main():
     with tab1:
         st.markdown("""
         <h2 style="color: #a8e6cf; border-bottom: 2px solid rgba(78, 205, 196, 0.3); padding-bottom: 8px;">
-            🏆 Player Rankings
+            Player Rankings
         </h2>
         """, unsafe_allow_html=True)
 
-        # Table
+        # Table - with dynamic team column detection
         display_cols = []
-        for col in ['Name', 'teamID', 'yearID', 'WAR', 'salary', 'wOBA', 'BABIP', 'ISO', 'WAR_per_M', 'composite_score']:
+        if 'Name' in filtered_df.columns:
+            display_cols.append('Name')
+
+        # Add team column if available (prioritize team_name)
+        team_col = get_available_columns(filtered_df, ['team_name', 'teamID', 'team', 'Team'])
+        if team_col:
+            display_cols.append(team_col[0])
+
+        # Add other metrics
+        for col in ['yearID', 'WAR', 'salary', 'wOBA', 'BABIP', 'ISO', 'WAR_per_M', 'composite_score']:
             if col in filtered_df.columns:
                 display_cols.append(col)
 
@@ -1167,33 +1186,33 @@ def main():
     with tab2:
         st.markdown("""
         <h2 style="color: #a8e6cf; border-bottom: 2px solid rgba(78, 205, 196, 0.3); padding-bottom: 8px; margin-bottom: 20px;">
-            📈 Visual Analytics
+             Visual Analytics
         </h2>
         """, unsafe_allow_html=True)
 
-        # Verificar qué gráficos están disponibles
+        # Check which charts are available
         has_scatter = 'WAR' in filtered_df.columns and 'salary' in filtered_df.columns
         has_year = len([col for col in ['yearID', 'Year', 'year'] if col in filtered_df.columns]) > 0
         has_war_per_m = 'WAR_per_M' in filtered_df.columns
-        has_team = len([col for col in ['teamID', 'team', 'Team'] if col in filtered_df.columns]) > 0
+        has_team = len(get_available_columns(filtered_df, ['team_name', 'teamID', 'team', 'Team'])) > 0
 
-        # PRIMERA FILA - WAR vs Salary
+        # FIRST ROW - WAR vs Salary
         if has_scatter:
-            st.markdown('<p class="chart-title">⚾ WAR vs Salary</p>', unsafe_allow_html=True)
+            st.markdown('<p class="chart-title">WAR vs Salary</p>', unsafe_allow_html=True)
             st.plotly_chart(create_scatter_plot(filtered_df, data['centroid']),
                            use_container_width=True,
                            key="scatter_plot_main")
             st.markdown("<br>", unsafe_allow_html=True)
         else:
-            st.markdown('<p class="chart-title">⚾ WAR vs Salary</p>', unsafe_allow_html=True)
+            st.markdown('<p class="chart-title">WAR vs Salary</p>', unsafe_allow_html=True)
             st.info("WAR and Salary data not available for this dataset")
             st.markdown("<br>", unsafe_allow_html=True)
 
-        # SEGUNDA FILA - Dos columnas
+        # SECOND ROW - Two columns
         col1, col2 = st.columns(2)
 
         with col1:
-            st.markdown('<p class="chart-title">📅 Players by Year</p>', unsafe_allow_html=True)
+            st.markdown('<p class="chart-title">Players by Year</p>', unsafe_allow_html=True)
             if has_year:
                 st.plotly_chart(create_year_distribution(filtered_df),
                                use_container_width=True,
@@ -1202,7 +1221,7 @@ def main():
                 st.info("No year data available")
 
         with col2:
-            st.markdown('<p class="chart-title">💰 WAR per $1M Distribution</p>', unsafe_allow_html=True)
+            st.markdown('<p class="chart-title">WAR per $1M Distribution</p>', unsafe_allow_html=True)
             if has_war_per_m:
                 st.plotly_chart(create_histogram(filtered_df, 'WAR_per_M'),
                                use_container_width=True,
@@ -1210,10 +1229,10 @@ def main():
             else:
                 st.info("No WAR per $1M data available")
 
-        # TERCERA FILA - Team Distribution
+        # THIRD ROW - Team Distribution
         if has_team:
             st.markdown("<br>", unsafe_allow_html=True)
-            st.markdown('<p class="chart-title">🏟️ Top Teams Distribution</p>', unsafe_allow_html=True)
+            st.markdown('<p class="chart-title">Top Teams Distribution</p>', unsafe_allow_html=True)
             st.plotly_chart(create_team_distribution(filtered_df),
                            use_container_width=True,
                            key="team_dist_main")
@@ -1221,7 +1240,7 @@ def main():
     with tab3:
         st.markdown("""
         <h2 style="color: #a8e6cf; border-bottom: 2px solid rgba(78, 205, 196, 0.3); padding-bottom: 8px; margin-bottom: 20px;">
-            🎯 Player Deep Dive
+            Player Deep Dive
         </h2>
         """, unsafe_allow_html=True)
 
@@ -1234,30 +1253,35 @@ def main():
                 col1, col2 = st.columns([1, 1.5])
 
                 with col1:
-                    # SOLO el título del jugador - nada más
+                    # ONLY the player title - nothing else
                     st.markdown(f"""
                     <h3 style="color: white; text-shadow: 0 0 10px rgba(78, 205, 196, 0.5); margin-bottom: 20px;">
-                        📋 {selected}
+                      {selected}
                     </h3>
                     """, unsafe_allow_html=True)
 
-                    # Crear un contenedor limpio para las métricas
+                    # Create a clean container for metrics
                     metrics_container = st.container()
 
                     with metrics_container:
-                        # Team (solo si existe)
-                        if 'teamID' in player and pd.notna(player['teamID']):
+                        # Team (look for team_name first)
+                        team_val = None
+                        for col in ['team_name', 'teamID', 'team', 'Team']:
+                            if col in player and pd.notna(player[col]):
+                                team_val = player[col]
+                                break
+
+                        if team_val:
                             st.markdown(f"""
                             <div style='background: rgba(255,255,255,0.06); border-radius: 10px; padding: 10px; border-left: 4px solid #4ecdc4; margin-bottom: 8px;'>
                                 <span style='color: #a8e6cf; font-size: 0.8rem; text-transform: uppercase;'>TEAM</span>
-                                <div style='color: white; font-size: 1.2rem; font-weight: 600;'>{player['teamID']}</div>
+                                <div style='color: white; font-size: 1.2rem; font-weight: 600;'>{team_val}</div>
                             </div>
                             """, unsafe_allow_html=True)
 
-                        # Year (solo si existe)
+                        # Year (only if exists)
                         if 'yearID' in player and pd.notna(player['yearID']):
-                            year_val = int(player['yearID']) if isinstance(player['yearID'], (int, float)) else player[
-                                'yearID']
+                            year_val = int(player['yearID']) if isinstance(player['yearID'], (int, float)) else player['yearID']
                             st.markdown(f"""
                             <div style='background: rgba(255,255,255,0.06); border-radius: 10px; padding: 10px; border-left: 4px solid #4ecdc4; margin-bottom: 8px;'>
                                 <span style='color: #a8e6cf; font-size: 0.8rem; text-transform: uppercase;'>YEAR</span>
@@ -1313,7 +1337,7 @@ def main():
                 with col2:
                     st.markdown("""
                     <h3 style="color: white; text-shadow: 0 0 10px rgba(78, 205, 196, 0.5); margin-bottom: 20px; text-align: center;">
-                        📊 Player Profile Comparison
+                        Player Profile Comparison
                     </h3>
                     """, unsafe_allow_html=True)
 
@@ -1330,13 +1354,13 @@ def main():
     with tab4:
         st.markdown("""
         <h2 style="color: #a8e6cf; border-bottom: 2px solid rgba(78, 205, 196, 0.3); padding-bottom: 8px; margin-bottom: 20px;">
-            📊 Correlation Analysis
+             Correlation Analysis
         </h2>
         """, unsafe_allow_html=True)
 
-        # Heatmap de correlaciones
+        # Correlation heatmap
         fig = create_correlation_heatmap(filtered_df)
-        if fig.data:  # Si hay datos en el gráfico
+        if fig.data:  # If there's data in the chart
             st.plotly_chart(fig,
                             use_container_width=True,
                             key="corr_heatmap_main")
@@ -1349,11 +1373,11 @@ def main():
         if not data['cluster_stats'].empty:
             st.markdown("""
             <h3 style="color: white; text-shadow: 0 0 10px rgba(78, 205, 196, 0.5); margin-bottom: 15px; font-size: 1.3rem;">
-                📊 Cluster Statistics
+                Cluster Statistics
             </h3>
             """, unsafe_allow_html=True)
 
-            # Mostrar el dataframe con estilo personalizado
+            # Display dataframe with custom styling
             st.dataframe(
                 data['cluster_stats'],
                 use_container_width=True,
@@ -1362,7 +1386,7 @@ def main():
         else:
             st.markdown("""
             <h3 style="color: white; text-shadow: 0 0 10px rgba(78, 205, 196, 0.5); margin-bottom: 15px; font-size: 1.3rem;">
-                📊 Cluster Statistics
+                 Cluster Statistics
             </h3>
             """, unsafe_allow_html=True)
             st.info("No cluster statistics available")
@@ -1370,7 +1394,7 @@ def main():
     with tab5:
         st.markdown("""
         <h2 style="color: #a8e6cf; border-bottom: 2px solid rgba(78, 205, 196, 0.3); padding-bottom: 8px; margin-bottom: 20px;">
-            📤 Export Data
+             Export Data
         </h2>
         """, unsafe_allow_html=True)
 
@@ -1390,14 +1414,14 @@ def main():
                 margin: 10px 0;
             '>
                 <div style='font-size: 1.3rem; color: #a8e6cf; margin-bottom: 20px; font-weight: 600;'>
-                    📥 Export Current View
+                     Export Current View
                 </div>
                 <div style='font-size: 1rem; color: white; margin-bottom: 15px;'>
                     <span style='color: #a8e6cf;'>Rows:</span> {len(filtered_df)} players
                 </div>
             """, unsafe_allow_html=True)
 
-            # Botón de descarga
+            # Download button
             csv = filtered_df.to_csv(index=False)
             b64 = base64.b64encode(csv.encode()).decode()
             st.markdown(f'''
@@ -1437,7 +1461,7 @@ def main():
                 margin: 10px 0;
             '>
                 <div style='font-size: 1.3rem; color: #a8e6cf; margin-bottom: 20px; font-weight: 600; text-align: center;'>
-                    📋 Dataset Info
+                     Dataset Info
                 </div>
                 <div style='margin-bottom: 15px;'>
                     <div style='display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid rgba(78, 205, 196, 0.2);'>
@@ -1465,7 +1489,7 @@ def main():
     <div class="footer">
         <p>⚾ Undervalued Gems Scout - Complete Baseball Analytics Platform</p>
         <p>Data: Lahman Database, FanGraphs • Model: K-Means Clustering</p>
-        <p>📊 {total_players} total players • {len(data.get('full_2025', []))} 2025 players</p>
+        <p>{total_players} total players • {len(data.get('full_2025', []))} 2025 players</p>
         <p style="font-size: 0.8rem; margin-top: 10px;">v2.0 • Professional Edition</p>
     </div>
     """, unsafe_allow_html=True)
