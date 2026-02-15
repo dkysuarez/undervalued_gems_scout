@@ -1,7 +1,7 @@
 """
 app.py - Undervalued Gems Scout Interactive Dashboard
 WITH DYNAMIC COLUMN DETECTION - PROFESSIONAL LOADING SCREEN
-UPDATED: Uses 'team_name' for team filtering
+UPDATED: Main table is primary view, dynamic metric filters
 """
 
 import streamlit as st
@@ -30,7 +30,6 @@ st.set_page_config(
 # =============================================================================
 def show_professional_loading_screen():
     """Professional full-screen loading animation"""
-
     # CSS for loading screen
     st.markdown("""
     <style>
@@ -443,6 +442,17 @@ st.markdown("""
         border-bottom: 1px solid rgba(78, 205, 196, 0.3);
         padding-bottom: 10px;
     }
+    
+    /* Style for the main table title */
+    .main-table-title {
+        color: #a8e6cf !important;
+        font-size: 1.8rem;
+        font-weight: 600;
+        margin: 20px 0 15px 0;
+        padding-bottom: 10px;
+        border-bottom: 2px solid rgba(78, 205, 196, 0.3);
+        text-shadow: 0 0 15px rgba(78, 205, 196, 0.3);
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -480,12 +490,18 @@ def load_all_data():
             data['full_2025'] = pd.DataFrame()
 
     # 3. All historical players
-    all_path = os.path.join(analysis_dir, 'all_players_with_clusters.csv')
-    if os.path.exists(all_path):
-        data['all_players'] = pd.read_csv(all_path)
-        st.sidebar.success(f"✅ Loaded historical: {len(data['all_players'])} players")
+    model_path = os.path.join(data_dir, 'model_ready_data.csv')
+    if os.path.exists(model_path):
+        data['all_players'] = pd.read_csv(model_path)
+        st.sidebar.success(f"✅ Loaded historical from model_ready_data: {len(data['all_players'])} players")
     else:
-        data['all_players'] = pd.DataFrame()
+        # Fallback al archivo viejo si no existe
+        all_path = os.path.join(analysis_dir, 'all_players_with_clusters.csv')
+        if os.path.exists(all_path):
+            data['all_players'] = pd.read_csv(all_path)
+            st.sidebar.warning(f"⚠️ Loaded OLD historical data (no team_name): {len(data['all_players'])} players")
+        else:
+            data['all_players'] = pd.DataFrame()
 
     # 4. Cluster statistics
     stats_path = os.path.join(analysis_dir, 'cluster_statistics.csv')
@@ -506,12 +522,17 @@ def load_all_data():
 # GET AVAILABLE COLUMNS (HELPER FUNCTION)
 # =============================================================================
 def get_available_columns(df, column_list):
-    """Return only columns that exist in the dataframe"""
-    return [col for col in column_list if col in df.columns]
-
+    """Return only columns that exist AND have non-null data"""
+    valid_cols = []
+    for col in column_list:
+        if col in df.columns:
+            # Check if column has at least one non-null value
+            if df[col].notna().any():
+                valid_cols.append(col)
+    return valid_cols
 
 # =============================================================================
-# SIDEBAR FILTERS
+# SIDEBAR FILTERS - UPDATED WITH DYNAMIC METRIC RANGES AND CORRECT PLAYER COUNT
 # =============================================================================
 def render_sidebar(data):
     with st.sidebar:
@@ -546,15 +567,13 @@ def render_sidebar(data):
         if 'WAR' in df.columns and 'salary' in df.columns:
             df['WAR_per_M'] = df['WAR'] / (df['salary'] + 0.1)
 
-        # ===== TEAM FILTER - UPDATED to prioritize team_name =====
+        # ===== TEAM FILTER =====
         st.markdown('<div class="sidebar-header">TEAM</div>', unsafe_allow_html=True)
-        # Look for team_name first, then fallback to other variants
         team_cols = get_available_columns(df, ['team_name', 'teamID', 'team', 'Team'])
         if team_cols:
             team_col = team_cols[0]
             teams = ['All Teams'] + sorted(df[team_col].dropna().unique().tolist())
             selected_team = st.selectbox("Team", teams, key="team_select")
-            # Show which column is being used (for debugging)
             if team_col != 'team_name':
                 st.caption(f"Using column: {team_col}")
         else:
@@ -571,34 +590,78 @@ def render_sidebar(data):
         else:
             selected_year = 'All Years'
 
-        # Metric filters
+        # ===== METRIC FILTERS =====
         st.markdown('<div class="sidebar-header">METRICS</div>', unsafe_allow_html=True)
 
+        # WAR filter
         if 'WAR' in df.columns:
-            min_war = st.slider("Min WAR", 0.0, float(df['WAR'].max()), 1.0, 0.5, key="war_slider")
+            war_min_val = float(df['WAR'].min())
+            war_max_val = float(df['WAR'].max())
+            min_war = st.slider(
+                "Min WAR",
+                war_min_val, war_max_val,
+                war_min_val,
+                0.5 if war_max_val > 10 else 0.1,
+                key="war_slider"
+            )
         else:
             min_war = 0
 
+        # wOBA filter
         if 'wOBA' in df.columns:
-            wOBA_min = st.slider("Min wOBA", 0.200, 0.500, 0.300, 0.010, format="%.3f", key="woba_slider")
+            woba_min_val = float(df['wOBA'].min())
+            woba_max_val = float(df['wOBA'].max())
+            wOBA_min = st.slider(
+                "Min wOBA",
+                woba_min_val, woba_max_val,
+                woba_min_val,
+                0.010,
+                format="%.3f",
+                key="woba_slider"
+            )
         else:
             wOBA_min = 0
 
+        # BABIP filter
         if 'BABIP' in df.columns:
-            babip_min = st.slider("Min BABIP", 0.200, 0.400, 0.200, 0.010, format="%.3f", key="babip_slider")
+            babip_min_val = float(df['BABIP'].min())
+            babip_max_val = float(df['BABIP'].max())
+            babip_min = st.slider(
+                "Min BABIP",
+                babip_min_val, babip_max_val,
+                babip_min_val,
+                0.010,
+                format="%.3f",
+                key="babip_slider"
+            )
         else:
             babip_min = 0
 
-        # Price filters
+        # ===== PRICE FILTERS =====
         st.markdown('<div class="sidebar-header">PRICE</div>', unsafe_allow_html=True)
 
         if 'salary' in df.columns:
-            max_salary = st.slider("Max Salary ($M)", 0.0, float(df['salary'].max()), 20.0, 1.0, key="salary_slider")
+            max_salary_val = float(df['salary'].max())
+            max_salary = st.slider(
+                "Max Salary ($M)",
+                0.0, max_salary_val,
+                max_salary_val,
+                1.0,
+                key="salary_slider"
+            )
         else:
             max_salary = 50
 
         if 'WAR_per_M' in df.columns:
-            min_war_per_m = st.slider("Min WAR per $1M", 0.0, 20.0, 2.0, 0.5, key="war_per_m_slider")
+            war_per_m_min_val = float(df['WAR_per_M'].min())
+            war_per_m_max_val = float(df['WAR_per_M'].max())
+            min_war_per_m = st.slider(
+                "Min WAR per $1M",
+                war_per_m_min_val, war_per_m_max_val,
+                war_per_m_min_val,
+                0.5,
+                key="war_per_m_slider"
+            )
         else:
             min_war_per_m = 0
 
@@ -623,11 +686,38 @@ def render_sidebar(data):
         top_n = st.number_input("Players to show", 5, 100, 20, 5, key="top_n_input")
 
         st.markdown("---")
-        st.metric("Players in view", len(df))
+
+        # ===== FIX: Calculate the CORRECT number of players after filters =====
+        # Create a temporary copy to apply filters and count
+        temp_df = df.copy()
+
+        # Apply team filter for counting
+        if selected_team != 'All Teams' and team_cols:
+            temp_df = temp_df[temp_df[team_cols[0]] == selected_team]
+
+        # Apply year filter for counting
+        if selected_year != 'All Years' and year_cols:
+            temp_df = temp_df[temp_df[year_cols[0]] == selected_year]
+
+        # Apply metric filters for counting
+        if 'WAR' in temp_df.columns:
+            temp_df = temp_df[temp_df['WAR'] >= min_war]
+        if 'wOBA' in temp_df.columns:
+            temp_df = temp_df[temp_df['wOBA'] >= wOBA_min]
+        if 'BABIP' in temp_df.columns:
+            temp_df = temp_df[temp_df['BABIP'] >= babip_min]
+        if 'salary' in temp_df.columns:
+            temp_df = temp_df[temp_df['salary'] <= max_salary]
+        if 'WAR_per_M' in temp_df.columns:
+            temp_df = temp_df[temp_df['WAR_per_M'] >= min_war_per_m]
+
+        # Show the CORRECT count (players that will be visible after filtering)
+        st.metric("Players in view", len(temp_df))
+        # ===== END OF FIX =====
 
         filters = {
             'dataset': selected_dataset,
-            'df': df,
+            'df': df,  # Keep the original unfiltered df for the main app logic
             'team': selected_team,
             'team_col': team_cols[0] if team_cols else None,
             'year': selected_year,
@@ -642,7 +732,6 @@ def render_sidebar(data):
         }
 
         return filters
-
 
 # =============================================================================
 # APPLY FILTERS
@@ -661,7 +750,7 @@ def apply_filters(filters):
     if filters['year'] != 'All Years' and filters['year_col'] and filters['year_col'] in df.columns:
         df = df[df[filters['year_col']] == filters['year']]
 
-    # Metric filters
+    # Metric filters - now using dynamic values from sidebar
     if 'WAR' in df.columns:
         df = df[df['WAR'] >= filters['min_war']]
 
@@ -685,10 +774,10 @@ def apply_filters(filters):
 
 
 # =============================================================================
-# VISUALIZATIONS - WITH DYNAMIC COLUMN DETECTION
+# VISUALIZATIONS
 # =============================================================================
 def create_scatter_plot(df, centroid):
-    """WAR vs Salary scatter plot - WITHOUT INTERNAL TITLE"""
+    """WAR vs Salary scatter plot"""
     if 'WAR' not in df.columns or 'salary' not in df.columns:
         return go.Figure()
 
@@ -744,7 +833,7 @@ def create_scatter_plot(df, centroid):
 
 
 def create_radar_chart(player, centroid):
-    """Radar chart comparing player to centroid - WITH WHITE TEXT"""
+    """Radar chart comparing player to centroid"""
     categories = ['WAR', 'BABIP', 'wOBA', 'ISO']
 
     player_values = []
@@ -828,7 +917,7 @@ def create_radar_chart(player, centroid):
 
 
 def create_trend_chart(df, top_n=10):
-    """Bar chart of top players - WITHOUT INTERNAL TITLE AND WITH WHITE TEXT"""
+    """Bar chart of top players"""
     if 'Name' not in df.columns:
         return go.Figure()
 
@@ -891,7 +980,7 @@ def create_trend_chart(df, top_n=10):
 
 
 def create_team_distribution(df):
-    """Pie chart of team distribution - WITHOUT INTERNAL TITLE - UPDATED for team_name"""
+    """Pie chart of team distribution"""
     team_cols = get_available_columns(df, ['team_name', 'teamID', 'team', 'Team'])
     if not team_cols:
         return go.Figure()
@@ -921,19 +1010,25 @@ def create_team_distribution(df):
 
 
 def create_year_distribution(df):
-    """Bar chart of year distribution - WITHOUT INTERNAL TITLE"""
+    """Bar chart of year distribution - CORREGIDO: años como categorías"""
     year_cols = [col for col in ['yearID', 'Year', 'year'] if col in df.columns]
     if not year_cols:
         return go.Figure()
 
     year_col = year_cols[0]
-    year_counts = df[year_col].value_counts().sort_index()
+
+    # Convertir años a enteros y luego a string para que sean categorías
+    df_copy = df.copy()
+    df_copy['year_str'] = df_copy[year_col].astype(int).astype(str)
+
+    # Contar frecuencia por año
+    year_counts = df_copy['year_str'].value_counts().sort_index()
 
     fig = px.bar(
         x=year_counts.index,
         y=year_counts.values,
         title=None,
-        labels={'x': 'Year', 'y': 'Count'},
+        labels={'x': 'Year', 'y': 'Number of Players'},
         color=year_counts.values,
         color_continuous_scale='Tealgrn'
     )
@@ -943,16 +1038,25 @@ def create_year_distribution(df):
         paper_bgcolor='rgba(0,0,0,0)',
         font_color='white',
         height=400,
-        xaxis=dict(title_font_color='white', tickfont_color='white'),
-        yaxis=dict(title_font_color='white', tickfont_color='white'),
-        coloraxis_colorbar=dict(title_font_color='white', tickfont_color='white')
+        xaxis=dict(
+            title=dict(text='Year', font=dict(color='white')),
+            tickfont=dict(color='white'),
+            type='category'  # Forzar eje como categoría, no como número
+        ),
+        yaxis=dict(
+            title=dict(text='Number of Players', font=dict(color='white')),
+            tickfont=dict(color='white')
+        ),
+        coloraxis_colorbar=dict(
+            title=dict(text='Count', font=dict(color='white')),
+            tickfont=dict(color='white')
+        )
     )
 
     return fig
 
-
 def create_correlation_heatmap(df):
-    """Correlation heatmap of metrics - WITH WHITE TEXT"""
+    """Correlation heatmap of metrics"""
     corr_cols = ['WAR', 'salary', 'BABIP', 'wOBA', 'ISO', 'K%',
                  'similarity_score', 'composite_score', 'WAR_per_M']
     corr_cols = [col for col in corr_cols if col in df.columns]
@@ -1002,7 +1106,7 @@ def create_correlation_heatmap(df):
 
 
 def create_histogram(df, column, title=None):
-    """Create histogram for any column - WITHOUT INTERNAL TITLE"""
+    """Create histogram for any column"""
     if column not in df.columns:
         return go.Figure()
 
@@ -1023,6 +1127,51 @@ def create_histogram(df, column, title=None):
         yaxis=dict(title_font_color='white', tickfont_color='white')
     )
     return fig
+
+
+# =============================================================================
+# DISPLAY MAIN TABLE (NEW HELPER FUNCTION)
+# =============================================================================
+def display_main_table(df, top_n, filters):
+    """Display the main data table prominently at the top of the app"""
+    st.markdown('<div class="main-table-title">📊 Player Rankings</div>', unsafe_allow_html=True)
+
+    # Build display columns dynamically
+    display_cols = []
+    if 'Name' in df.columns:
+        display_cols.append('Name')
+
+    # Add team column if available (prioritize team_name)
+    team_col = get_available_columns(df, ['team_name', 'teamID', 'team', 'Team'])
+    if team_col:
+        display_cols.append(team_col[0])
+
+    # Add other metrics
+    for col in ['yearID', 'WAR', 'salary', 'wOBA', 'BABIP', 'ISO', 'WAR_per_M', 'composite_score']:
+        if col in df.columns:
+            display_cols.append(col)
+
+    if display_cols:
+        display_df = df[display_cols].head(top_n).copy()
+
+        # Format columns for better readability
+        if 'salary' in display_df.columns:
+            display_df['salary'] = display_df['salary'].apply(lambda x: f"${x:.2f}M")
+        if 'WAR_per_M' in display_df.columns:
+            display_df['WAR_per_M'] = display_df['WAR_per_M'].apply(lambda x: f"{x:.2f}")
+        if 'wOBA' in display_df.columns:
+            display_df['wOBA'] = display_df['wOBA'].apply(lambda x: f"{x:.3f}")
+        if 'BABIP' in display_df.columns:
+            display_df['BABIP'] = display_df['BABIP'].apply(lambda x: f"{x:.3f}")
+        if 'ISO' in display_df.columns:
+            display_df['ISO'] = display_df['ISO'].apply(lambda x: f"{x:.3f}")
+
+        st.dataframe(display_df, use_container_width=True, height=400)
+
+        # Show count of displayed players vs total
+        st.caption(f"Showing top {min(top_n, len(df))} of {len(df)} players")
+    else:
+        st.info("No displayable columns found in the dataset")
 
 
 # =============================================================================
@@ -1136,9 +1285,13 @@ def main():
 
     st.markdown("---")
 
+    # ========== MAIN TABLE (NOW PROMINENTLY DISPLAYED) ==========
+    display_main_table(filtered_df, filters['top_n'], filters)
+
+    st.markdown("---")
+
     # ========== TABS WITH UNIQUE KEYS ==========
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "📊 Player Rankings",
+    tab1, tab2, tab3, tab4 = st.tabs([
         "📈 Visual Analytics",
         "🎯 Player Deep Dive",
         "📊 Correlations",
@@ -1146,44 +1299,6 @@ def main():
     ])
 
     with tab1:
-        st.markdown("""
-        <h2 style="color: #a8e6cf; border-bottom: 2px solid rgba(78, 205, 196, 0.3); padding-bottom: 8px;">
-            Player Rankings
-        </h2>
-        """, unsafe_allow_html=True)
-
-        # Table - with dynamic team column detection
-        display_cols = []
-        if 'Name' in filtered_df.columns:
-            display_cols.append('Name')
-
-        # Add team column if available (prioritize team_name)
-        team_col = get_available_columns(filtered_df, ['team_name', 'teamID', 'team', 'Team'])
-        if team_col:
-            display_cols.append(team_col[0])
-
-        # Add other metrics
-        for col in ['yearID', 'WAR', 'salary', 'wOBA', 'BABIP', 'ISO', 'WAR_per_M', 'composite_score']:
-            if col in filtered_df.columns:
-                display_cols.append(col)
-
-        if display_cols:
-            display_df = filtered_df[display_cols].head(filters['top_n']).copy()
-
-            # Format
-            if 'salary' in display_df.columns:
-                display_df['salary'] = display_df['salary'].apply(lambda x: f"${x:.2f}M")
-            if 'WAR_per_M' in display_df.columns:
-                display_df['WAR_per_M'] = display_df['WAR_per_M'].apply(lambda x: f"{x:.2f}")
-
-            st.dataframe(display_df, use_container_width=True, height=400)
-
-        # Bar chart with unique key
-        st.plotly_chart(create_trend_chart(filtered_df, filters['top_n']),
-                       use_container_width=True,
-                       key="trend_chart_main")
-
-    with tab2:
         st.markdown("""
         <h2 style="color: #a8e6cf; border-bottom: 2px solid rgba(78, 205, 196, 0.3); padding-bottom: 8px; margin-bottom: 20px;">
              Visual Analytics
@@ -1237,7 +1352,7 @@ def main():
                            use_container_width=True,
                            key="team_dist_main")
 
-    with tab3:
+    with tab2:
         st.markdown("""
         <h2 style="color: #a8e6cf; border-bottom: 2px solid rgba(78, 205, 196, 0.3); padding-bottom: 8px; margin-bottom: 20px;">
             Player Deep Dive
@@ -1351,7 +1466,7 @@ def main():
         else:
             st.info("Select a player to see detailed analysis")
 
-    with tab4:
+    with tab3:
         st.markdown("""
         <h2 style="color: #a8e6cf; border-bottom: 2px solid rgba(78, 205, 196, 0.3); padding-bottom: 8px; margin-bottom: 20px;">
              Correlation Analysis
@@ -1391,7 +1506,7 @@ def main():
             """, unsafe_allow_html=True)
             st.info("No cluster statistics available")
 
-    with tab5:
+    with tab4:
         st.markdown("""
         <h2 style="color: #a8e6cf; border-bottom: 2px solid rgba(78, 205, 196, 0.3); padding-bottom: 8px; margin-bottom: 20px;">
              Export Data
