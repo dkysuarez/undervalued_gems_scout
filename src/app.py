@@ -1134,7 +1134,7 @@ def create_histogram(df, column, title=None):
 # =============================================================================
 def display_main_table(df, top_n, filters):
     """Display the main data table prominently at the top of the app"""
-    st.markdown('<div class="main-table-title">📊 Player Rankings</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-table-title"> Player Rankings</div>', unsafe_allow_html=True)
 
     # Build display columns dynamically
     display_cols = []
